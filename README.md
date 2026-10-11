@@ -1,0 +1,2 @@
+# iCalendar
+Go iCalendar library
