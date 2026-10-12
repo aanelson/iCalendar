@@ -13,7 +13,10 @@
 //     IANA name, like /mozilla.org/20050126_1/America/New_York, which Load
 //     maps to the IANA zone.
 //
-// Both functions cache what they build. The results are immutable and
+// DefinitionOf goes the other way, for writing: it describes a
+// *time.Location as a VTIMEZONE definition, which ical.NewTimezone writes.
+//
+// All three cache what they build. The results are immutable and
 // depend only on their input, so the caches are shared process-wide and
 // are bounded.
 //
@@ -229,6 +232,7 @@ func (c *lru[V]) put(key string, v V) {
 // The caches. Failed lookups are cached too (as nil), so a feed repeating
 // a bad TZID doesn't reach the zoneinfo files on every property.
 var (
-	loaded   = newLRU[*time.Location](4096)
-	compiled = newLRU[compileResult](1024)
+	loaded    = newLRU[*time.Location](4096)
+	compiled  = newLRU[compileResult](1024)
+	described = newLRU[describedZone](1024)
 )
