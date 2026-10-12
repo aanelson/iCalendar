@@ -544,7 +544,7 @@ func TestConformanceValueRecurGrammar(t *testing.T) {
 		"FREQ=WEEKLY;BYDAY=XX":               "weekday",
 		"FREQ=WEEKLY;WKST=XX":                "weekday",
 		"FREQ=DAILY;BYHOUR=1,,2":             "a list item is required",
-		"FREQ=DAILY;X-NAME=1":                "recur-rule-part has no extension parts",
+		"FREQ=DAILY;NAME=1":                  "recur-rule-part has no other parts",
 		"FREQ":                               "\"=\" freq",
 	} {
 		if r, err := (&ical.Property{Name: "RRULE", Value: in}).Recur(); err == nil {
@@ -567,6 +567,18 @@ func TestConformanceValueRecurGrammar(t *testing.T) {
 	for _, in := range []string{"FREQ=DAILY;INTERVAL=0", "FREQ=DAILY;COUNT=0", "FREQ=MONTHLY;BYDAY=0MO,1TU"} {
 		if r, err := (&ical.Property{Name: "RRULE", Value: in}).Recur(); err == nil {
 			t.Logf("LENIENT RECUR %q -> %v", in, r)
+		}
+	}
+	// Outside the grammar, which has no x-name part and lets no part
+	// repeat. The library reads the rest of the rule and sets these aside
+	// in Ignored (recur.ParseRule's doc).
+	for in, ignored := range map[string]string{
+		"FREQ=DAILY;X-NAME=1":   "X-NAME=1",
+		"FREQ=DAILY;FREQ=DAILY": "FREQ=DAILY",
+	} {
+		r, err := (&ical.Property{Name: "RRULE", Value: in}).Recur()
+		if err != nil || r.String() != "FREQ=DAILY" || !slices.Equal(r.Ignored, []string{ignored}) {
+			t.Errorf("Recur(%q) = %v (ignoring %q), %v; want FREQ=DAILY, ignoring %q", in, r, r.Ignored, err, ignored)
 		}
 	}
 }

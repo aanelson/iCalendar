@@ -3,6 +3,7 @@ package recur
 import (
 	"math/rand/v2"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -53,12 +54,76 @@ func TestParseRoundTrip(t *testing.T) {
 }
 
 func TestParseLenient(t *testing.T) {
-	r, err := ParseRule("freq=weekly;byday=mo,we;count=3;")
-	if err != nil {
-		t.Fatal(err)
+	for in, want := range map[string]string{
+		"freq=weekly;byday=mo,we;count=3;": "FREQ=WEEKLY;COUNT=3;BYDAY=MO,WE",
+		// Parts that can't change the meaning are read and not written.
+		"RSCALE=GREGORIAN;FREQ=WEEKLY;X-VND-NOTE=a;BYDAY=MO,WE;byday=we,mo;SKIP=OMIT": "FREQ=WEEKLY;BYDAY=MO,WE",
+	} {
+		r, err := ParseRule(in)
+		if err != nil {
+			t.Errorf("ParseRule(%q): %v", in, err)
+		} else if r.String() != want {
+			t.Errorf("ParseRule(%q) = %s, want %s", in, r, want)
+		}
 	}
-	if r.String() != "FREQ=WEEKLY;COUNT=3;BYDAY=MO,WE" {
-		t.Errorf("got %s", r)
+	// None of them is silent.
+	r, _ := ParseRule("RSCALE=GREGORIAN;FREQ=WEEKLY;X-VND-NOTE=a;BYDAY=MO,WE; byday=we,mo ;SKIP=OMIT")
+	if want := []string{"RSCALE=GREGORIAN", "X-VND-NOTE=a", "byday=we,mo", "SKIP=OMIT"}; !slices.Equal(r.Ignored, want) {
+		t.Errorf("Ignored = %q, want %q", r.Ignored, want)
+	}
+	if r, _ := ParseRule("FREQ=WEEKLY;BYDAY=MO"); r.Ignored != nil {
+		t.Errorf("Ignored = %q for a rule with nothing to ignore", r.Ignored)
+	}
+}
+
+// Repeated parts can't make parsing quadratic: many repeats of one part
+// after a long first value, or one repeat of two long lists ordered so that
+// a naive set comparison scans each to its end.
+func TestHostileRulesAreLinear(t *testing.T) {
+	if testing.Short() {
+		t.Skip("slow")
+	}
+	fill := func(prefix, item string, n int) string {
+		return prefix + strings.Repeat(item+",", max(n-len(prefix), 0)/(len(item)+1)) + item
+	}
+	cases := map[string]func(n int) string{
+		"many repeats": func(n int) string {
+			return fill("FREQ=DAILY;BYYEARDAY=", "1", n/2) + strings.Repeat(";BYYEARDAY=1", n/2/12)
+		},
+		"one long repeat": func(n int) string {
+			var all []string
+			for d := 1; d <= 366; d++ {
+				all = append(all, strconv.Itoa(d), strconv.Itoa(-d))
+			}
+			every := strings.Join(all, ",")
+			return fill("FREQ=YEARLY;BYYEARDAY=", every, n/2) + fill(";BYYEARDAY=", "1", n/2-len(every)) + "," + every
+		},
+		"many x-names": func(n int) string { return "FREQ=DAILY" + strings.Repeat(";X-A=1", n/6) },
+	}
+	for name, gen := range cases {
+		t.Run(name, func(t *testing.T) {
+			// The fastest of a few runs, as in contentline's
+			// TestHostileInputsAreLinear.
+			measure := func(n int) time.Duration {
+				in := gen(n)
+				best := time.Duration(1<<63 - 1)
+				for range 3 {
+					start := time.Now()
+					if _, err := ParseRule(in); err != nil {
+						t.Fatal(err)
+					}
+					best = min(best, time.Since(start))
+				}
+				return best
+			}
+			measure(1 << 16) // warm up
+			small, big := measure(1<<20), measure(4<<20)
+			// Linear predicts 4x (a little more for the sort); quadratic
+			// would be 16x. Allow noise.
+			if big > 10*small+20*time.Millisecond {
+				t.Errorf("1 MiB took %v, 4 MiB took %v: not linear", small, big)
+			}
+		})
 	}
 }
 
@@ -69,8 +134,10 @@ func TestParseErrors(t *testing.T) {
 		"", "COUNT=3", "FREQ=FORTNIGHTLY", "FREQ=DAILY;COUNT=0", "FREQ=DAILY;INTERVAL=0",
 		"FREQ=DAILY;COUNT=-1", "FREQ=DAILY;FREQ=WEEKLY", "FREQ=DAILY;BYHOUR=24",
 		"FREQ=DAILY;BYMONTHDAY=0", "FREQ=DAILY;BYMONTHDAY=32", "FREQ=DAILY;BYDAY=XX",
-		"FREQ=DAILY;BYDAY=54MO", "FREQ=DAILY;UNTIL=1997", "FREQ=DAILY;X-FOO=1",
+		"FREQ=DAILY;BYDAY=54MO", "FREQ=DAILY;UNTIL=1997", "FREQ=DAILY;FOO=1",
 		"FREQ=DAILY;COUNT=99999999999", "FREQ=DAILY;BYMONTH=1,,2", "FREQ=DAILY;WKST",
+		"FREQ=DAILY;COUNT=2;COUNT=3", "FREQ=DAILY;RSCALE=CHINESE", "FREQ=DAILY;SKIP=BACKWARD",
+		"FREQ=DAILY;BYHOUR=1;BYHOUR=24",
 	} {
 		if _, err := ParseRule(s); err == nil {
 			t.Errorf("ParseRule(%q) succeeded", s)
@@ -402,6 +469,7 @@ func FuzzRule(f *testing.F) {
 		"FREQ=DAILY;COUNT=10", "FREQ=YEARLY;BYWEEKNO=1,-1;BYDAY=MO", "FREQ=MONTHLY;BYDAY=-1FR;BYSETPOS=1",
 		"FREQ=HOURLY;INTERVAL=7;BYHOUR=1,9", "FREQ=MINUTELY;BYSECOND=0,30;BYMONTH=2", "FREQ=WEEKLY;INTERVAL=2;WKST=SU;BYDAY=TU,SU",
 		"FREQ=YEARLY;BYYEARDAY=-1,100;BYMONTHDAY=10", "FREQ=SECONDLY;INTERVAL=86401;COUNT=5",
+		"FREQ=WEEKLY;BYDAY=MO,WE;X-A=1;BYDAY=WE,MO,MO", "RSCALE=GREGORIAN;FREQ=MONTHLY;SKIP=OMIT;BYMONTHDAY=31;BYMONTHDAY=31",
 	} {
 		f.Add(s, int64(19970902090000), int64(3), int64(40))
 	}

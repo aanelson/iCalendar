@@ -588,7 +588,8 @@ func (e Event) SetDuration(d Duration) {
 	e.Props.Set(p)
 }
 
-// SetRule sets the item's only RRULE.
+// SetRule sets the item's only RRULE, without r.Ignored (see
+// Property.SetRecur).
 func (it Item) SetRule(r recur.Rule) {
 	p := NewProperty("RRULE", "")
 	p.SetRecur(r)

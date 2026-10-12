@@ -36,9 +36,10 @@ jobs:
       - run: go version
       - run: go test ./...
       - name: go test -race
-        # -short skips the tests that time themselves (TestHostileFeeds and
-        # TestHostileInputsAreLinear), which the race detector slows past
-        # their limits; the step above runs them.
+        # -short skips the tests that time themselves (TestHostileFeeds,
+        # TestHostileInputsAreLinear and TestHostileRulesAreLinear), which
+        # the race detector slows past their limits; the step above runs
+        # them.
         run: go test -race -short ./...
       - name: Check the fixture suites ran
         # The corpus and vector tests skip themselves when their testdata is

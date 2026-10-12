@@ -16,6 +16,7 @@
 package recur
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"slices"
@@ -155,6 +156,12 @@ type Rule struct {
 	ByWeekNo   []int        // 1 to 53 and -53 to -1
 	ByMonth    []int        // 1 to 12
 	BySetPos   []int        // 1 to 366 and -366 to -1
+
+	// Ignored holds the parts ParseRule read but doesn't use, as written: a
+	// part given again with the same value, RSCALE=GREGORIAN, SKIP=OMIT, and
+	// x-name parts. String doesn't write them, so a caller can see what a
+	// rule written back leaves out, and a strict one can refuse the rule.
+	Ignored []string
 }
 
 // A ParseError reports a RECUR value that can't be read.
@@ -176,14 +183,19 @@ func (e *ParseError) Error() string {
 // Part names and values are read case-insensitively, spaces around them and
 // around list items are ignored, numbers may have leading zeros (BYMONTHDAY=
 // 001), and an empty part (a trailing ";") is ignored, as most producers
-// expect. Everything else follows the §3.3.10 grammar: an unknown or
-// repeated part, a value out of its range, a COUNT or INTERVAL below 1, or a
-// missing FREQ is an error. Constraints between parts (such as COUNT with
-// UNTIL) are checked by Validate, not here, so a rule that breaks one can
-// still be expanded.
+// expect. Some parts are read and kept in the rule's Ignored, rather than
+// costing the whole rule: a part given again with the same value; RFC
+// 7529's RSCALE=GREGORIAN and SKIP=OMIT, which together are RFC 5545's own
+// recurrence; and an x-name part (X-FOO=1, which RFC 2445 allowed), whose
+// meaning is unknown, so it is skipped as any reader that doesn't know it
+// would. Everything else follows the §3.3.10 grammar: an unknown part, a
+// part repeated with a different value, a value out of its range, a COUNT
+// or INTERVAL below 1, a missing FREQ, or another RSCALE or SKIP is an
+// error. Constraints between parts (such as COUNT with UNTIL) are checked by
+// Validate, not here, so a rule that breaks one can still be expanded.
 func ParseRule(s string) (Rule, error) {
 	var r Rule
-	seen := map[string]bool{}
+	seen := map[string]Rule{} // part name → the part alone, its lists as sets
 	for part := range strings.SplitSeq(s, ";") {
 		if strings.TrimSpace(part) == "" {
 			continue
@@ -197,71 +209,131 @@ func ParseRule(s string) (Rule, error) {
 		if !ok {
 			return fail("no '='")
 		}
-		if seen[name] {
-			return fail("appears more than once")
-		}
-		seen[name] = true
-		var err error
-		switch name {
-		case "FREQ":
-			r.Freq = 0
-			for f := Secondly; f <= Yearly; f++ {
-				if strings.EqualFold(value, freqNames[f]) {
-					r.Freq = f
-				}
-			}
-			if r.Freq == 0 {
-				return fail("unknown frequency %q", value)
-			}
-		case "UNTIL":
-			v, isDate, utc, perr := icaltime.Parse(strings.ToUpper(value))
-			if perr != nil {
-				return fail("%v", perr)
-			}
-			r.Until = Until{DateTime: v, IsDate: isDate, UTC: utc}
-		case "COUNT":
-			if r.Count, err = positive(value); err != nil {
-				return fail("%v", err)
-			}
-		case "INTERVAL":
-			if r.Interval, err = positive(value); err != nil {
-				return fail("%v", err)
-			}
-		case "BYSECOND":
-			r.BySecond, err = intList(value, 0, 60, false)
-		case "BYMINUTE":
-			r.ByMinute, err = intList(value, 0, 59, false)
-		case "BYHOUR":
-			r.ByHour, err = intList(value, 0, 23, false)
-		case "BYDAY":
-			r.ByDay, err = weekdayList(value)
-		case "BYMONTHDAY":
-			r.ByMonthDay, err = intList(value, 1, 31, true)
-		case "BYYEARDAY":
-			r.ByYearDay, err = intList(value, 1, 366, true)
-		case "BYWEEKNO":
-			r.ByWeekNo, err = intList(value, 1, 53, true)
-		case "BYMONTH":
-			r.ByMonth, err = intList(value, 1, 12, false)
-		case "BYSETPOS":
-			r.BySetPos, err = intList(value, 1, 366, true)
-		case "WKST":
-			d, ok := parseWeekday(value)
-			if !ok {
-				return fail("unknown weekday %q", value)
-			}
-			r.WeekStart = d
-		default:
-			return fail("unknown rule part")
-		}
-		if err != nil {
+		var one Rule
+		if err := one.setPart(name, value); err != nil {
 			return fail("%v", err)
+		}
+		was, repeated := seen[name]
+		if repeated {
+			// "Individual rule parts MUST only be specified once", but one
+			// given again with the same value says nothing new.
+			if !was.Equal(one) {
+				return fail("appears more than once, with different values")
+			}
+		} else {
+			// Kept as a set, so comparing a repeat costs only the repeat's
+			// own length, however long the first list was.
+			seen[name] = one.asSets()
+			r.merge(one)
+		}
+		if repeated || name == "RSCALE" || name == "SKIP" || isXName(name) {
+			r.Ignored = append(r.Ignored, strings.TrimSpace(part))
 		}
 	}
 	if r.Freq == 0 {
 		return Rule{}, &ParseError{Value: s, Msg: "no FREQ"}
 	}
 	return r, nil
+}
+
+// setPart sets the rule part name, in upper case, to value. RSCALE, SKIP and
+// an x-name part are checked and set nothing.
+func (r *Rule) setPart(name, value string) error {
+	var err error
+	switch name {
+	case "FREQ":
+		for f := Secondly; f <= Yearly; f++ {
+			if strings.EqualFold(value, freqNames[f]) {
+				r.Freq = f
+				return nil
+			}
+		}
+		return fmt.Errorf("unknown frequency %q", value)
+	case "UNTIL":
+		v, isDate, utc, err := icaltime.Parse(strings.ToUpper(value))
+		if err != nil {
+			return err
+		}
+		r.Until = Until{DateTime: v, IsDate: isDate, UTC: utc}
+	case "COUNT":
+		r.Count, err = positive(value)
+	case "INTERVAL":
+		r.Interval, err = positive(value)
+	case "BYSECOND":
+		r.BySecond, err = intList(value, 0, 60, false)
+	case "BYMINUTE":
+		r.ByMinute, err = intList(value, 0, 59, false)
+	case "BYHOUR":
+		r.ByHour, err = intList(value, 0, 23, false)
+	case "BYDAY":
+		r.ByDay, err = weekdayList(value)
+	case "BYMONTHDAY":
+		r.ByMonthDay, err = intList(value, 1, 31, true)
+	case "BYYEARDAY":
+		r.ByYearDay, err = intList(value, 1, 366, true)
+	case "BYWEEKNO":
+		r.ByWeekNo, err = intList(value, 1, 53, true)
+	case "BYMONTH":
+		r.ByMonth, err = intList(value, 1, 12, false)
+	case "BYSETPOS":
+		r.BySetPos, err = intList(value, 1, 366, true)
+	case "WKST":
+		d, ok := parseWeekday(value)
+		if !ok {
+			return fmt.Errorf("unknown weekday %q", value)
+		}
+		r.WeekStart = d
+	// RFC 7529: "SKIP=OMIT: this is the default option and corresponds to
+	// the existing iCalendar behavior", and RSCALE=GREGORIAN is iCalendar's
+	// own calendar. Another calendar, or filling in the dates OMIT drops,
+	// changes the instances.
+	case "RSCALE":
+		if !strings.EqualFold(value, "GREGORIAN") {
+			return fmt.Errorf("calendar %q is not supported", value)
+		}
+	case "SKIP":
+		if !strings.EqualFold(value, "OMIT") {
+			return fmt.Errorf("%q is not supported", value)
+		}
+	default:
+		if !isXName(name) {
+			return errors.New("unknown rule part")
+		}
+	}
+	return err
+}
+
+// merge sets in r the parts set in o.
+func (r *Rule) merge(o Rule) {
+	r.Freq = cmp.Or(o.Freq, r.Freq)
+	r.Until = cmp.Or(o.Until, r.Until)
+	r.Count = cmp.Or(o.Count, r.Count)
+	r.Interval = cmp.Or(o.Interval, r.Interval)
+	r.WeekStart = cmp.Or(o.WeekStart, r.WeekStart)
+	r.BySecond = orList(o.BySecond, r.BySecond)
+	r.ByMinute = orList(o.ByMinute, r.ByMinute)
+	r.ByHour = orList(o.ByHour, r.ByHour)
+	r.ByDay = orList(o.ByDay, r.ByDay)
+	r.ByMonthDay = orList(o.ByMonthDay, r.ByMonthDay)
+	r.ByYearDay = orList(o.ByYearDay, r.ByYearDay)
+	r.ByWeekNo = orList(o.ByWeekNo, r.ByWeekNo)
+	r.ByMonth = orList(o.ByMonth, r.ByMonth)
+	r.BySetPos = orList(o.BySetPos, r.BySetPos)
+}
+
+// orList returns a if it is set, else b.
+func orList[T any](a, b []T) []T {
+	if a != nil {
+		return a
+	}
+	return b
+}
+
+// isXName reports whether name, in upper case, is an x-name (RFC 5545
+// §3.1): "X-" [vendorid "-"] 1*(ALPHA / DIGIT / "-").
+func isXName(name string) bool {
+	rest, ok := strings.CutPrefix(name, "X-")
+	return ok && rest != "" && strings.Trim(rest, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-") == ""
 }
 
 func positive(s string) (int, error) {
@@ -497,27 +569,35 @@ func (r Rule) hasByPart() bool {
 }
 
 // Equal reports whether r and r2 describe the same rule: the same parts,
-// with BYxxx lists compared as sets.
+// with BYxxx lists compared as sets. Ignored parts don't count.
 func (r Rule) Equal(r2 Rule) bool {
-	return r.Freq == r2.Freq && max(r.Interval, 1) == max(r2.Interval, 1) &&
-		r.Count == r2.Count && r.Until == r2.Until && r.WeekStart == r2.WeekStart &&
-		sameSet(r.BySecond, r2.BySecond) && sameSet(r.ByMinute, r2.ByMinute) &&
-		sameSet(r.ByHour, r2.ByHour) && sameSet(r.ByMonthDay, r2.ByMonthDay) &&
-		sameSet(r.ByYearDay, r2.ByYearDay) && sameSet(r.ByWeekNo, r2.ByWeekNo) &&
-		sameSet(r.ByMonth, r2.ByMonth) && sameSet(r.BySetPos, r2.BySetPos) &&
-		sameSet(r.ByDay, r2.ByDay)
+	a, b := r.asSets(), r2.asSets()
+	return a.Freq == b.Freq && max(a.Interval, 1) == max(b.Interval, 1) &&
+		a.Count == b.Count && a.Until == b.Until && a.WeekStart == b.WeekStart &&
+		slices.Equal(a.BySecond, b.BySecond) && slices.Equal(a.ByMinute, b.ByMinute) &&
+		slices.Equal(a.ByHour, b.ByHour) && slices.Equal(a.ByMonthDay, b.ByMonthDay) &&
+		slices.Equal(a.ByYearDay, b.ByYearDay) && slices.Equal(a.ByWeekNo, b.ByWeekNo) &&
+		slices.Equal(a.ByMonth, b.ByMonth) && slices.Equal(a.BySetPos, b.BySetPos) &&
+		slices.Equal(a.ByDay, b.ByDay)
 }
 
-func sameSet[T comparable](a, b []T) bool {
-	for _, x := range a {
-		if !slices.Contains(b, x) {
-			return false
-		}
-	}
-	for _, x := range b {
-		if !slices.Contains(a, x) {
-			return false
-		}
-	}
-	return true
+// asSets returns r with each BYxxx list sorted and holding each item once,
+// in new slices.
+func (r Rule) asSets() Rule {
+	r.BySecond = asSet(r.BySecond, cmp.Compare[int])
+	r.ByMinute = asSet(r.ByMinute, cmp.Compare[int])
+	r.ByHour = asSet(r.ByHour, cmp.Compare[int])
+	r.ByDay = asSet(r.ByDay, func(a, b WeekdayNum) int {
+		return cmp.Or(cmp.Compare(a.N, b.N), cmp.Compare(a.Day, b.Day))
+	})
+	r.ByMonthDay = asSet(r.ByMonthDay, cmp.Compare[int])
+	r.ByYearDay = asSet(r.ByYearDay, cmp.Compare[int])
+	r.ByWeekNo = asSet(r.ByWeekNo, cmp.Compare[int])
+	r.ByMonth = asSet(r.ByMonth, cmp.Compare[int])
+	r.BySetPos = asSet(r.BySetPos, cmp.Compare[int])
+	return r
+}
+
+func asSet[T comparable](list []T, compare func(T, T) int) []T {
+	return slices.Compact(slices.SortedFunc(slices.Values(list), compare))
 }
