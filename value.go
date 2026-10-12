@@ -620,9 +620,11 @@ func (p Period) EndTime() DateTime {
 }
 
 // Periods returns the value read as a comma-separated list of PERIOD
-// values, as for FREEBUSY and RDATE;VALUE=PERIOD.
+// values, as for FREEBUSY and RDATE;VALUE=PERIOD. A period that doesn't
+// end after it starts is returned as written, with an error (§3.3.9).
 func (p *Property) Periods(r tz.Resolver) ([]Period, error) {
 	var out []Period
+	var backwards error
 	for item := range strings.SplitSeq(p.Value, ",") {
 		item = strings.TrimSpace(item)
 		if item == "" {
@@ -644,9 +646,13 @@ func (p *Property) Periods(r tz.Resolver) ([]Period, error) {
 		} else if per.End, err = p.parseDateTime(rest, r); err != nil {
 			return out, err
 		}
+		// "The start MUST be before the end", or the duration positive.
+		if backwards == nil && !per.EndTime().Time().After(per.Start.Time()) {
+			backwards = p.valueError(fmt.Errorf("period %q doesn't end after it starts", item))
+		}
 		out = append(out, per)
 	}
-	return out, nil
+	return out, backwards
 }
 
 // RECUR (RFC 5545 §3.3.10)

@@ -289,6 +289,9 @@ func (x *Expander) newStream(cal *Calendar, g *group, from, to time.Time, floati
 		ps, err := p.Periods(master.resolver())
 		keep(err)
 		for _, per := range ps {
+			if !per.EndTime().Time().After(per.Start.Time()) {
+				continue // err says why; the instance keeps the series' length
+			}
 			if s.periods == nil {
 				s.periods = map[int64]DateTime{}
 			}

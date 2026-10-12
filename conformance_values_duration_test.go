@@ -641,13 +641,22 @@ func TestConformanceValuePeriod(t *testing.T) {
 	}
 
 	// "The start of the period MUST be before the end of the period" and
-	// period-start has "a start and positive duration". A reader with no
-	// strict mode may still return what was written; that is reported.
+	// period-start has "a start and positive duration": an error, with the
+	// period as written.
 	for _, in := range []string{
 		"19970102T070000Z/19970101T180000Z",
 		"19970101T180000Z/19970101T180000Z",
 		"19970101T180000Z/-PT1H",
 		"19970101T180000Z/PT0S",
+	} {
+		ps, err := (&ical.Property{Name: "FREEBUSY", Value: in}).Periods(nil)
+		if err == nil || len(ps) != 1 {
+			t.Errorf("Periods(%q) = %+v, %v; want the period and an error", in, ps, err)
+		}
+	}
+	// A reader with no strict mode may still return what was written; that
+	// is reported.
+	for _, in := range []string{
 		// date-time is required at both ends.
 		"19970101/19970102",
 		"19970101T180000Z/19970102",
