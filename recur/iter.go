@@ -276,7 +276,16 @@ func (it *ruleIter) next() (int64, bool) {
 			it.advance()
 			continue
 		}
-		if it.untilSet && it.pastUntil(t) || t > it.known {
+		if it.untilSet && it.pastUntil(t) {
+			if it.until.UTC && it.inGap(t) {
+				// A time in a DST gap resolves to after the wall-clock
+				// times that follow it, so they may still be within UNTIL.
+				continue
+			}
+			it.finish()
+			return 0, false
+		}
+		if t > it.known {
 			it.finish()
 			return 0, false
 		}
@@ -308,6 +317,16 @@ func (it *ruleIter) pastUntil(t int64) bool {
 	default:
 		return t > it.untilAt
 	}
+}
+
+// inGap reports whether the wall-clock second t doesn't occur in the rule's
+// zone (clocks go forward over it).
+func (it *ruleIter) inGap(t int64) bool {
+	if it.loc == nil {
+		return false
+	}
+	wall := civil.DateTimeOfEpochSecond(t)
+	return civil.DateTimeOf(wall.In(it.loc)) != wall
 }
 
 // finish records that the walk reached the rule's end.
