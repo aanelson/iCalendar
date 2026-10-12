@@ -704,11 +704,13 @@ func TestConformanceCalendarProperties(t *testing.T) {
 	}
 }
 
-// ccGap skips a test whose RFC requirement the library doesn't meet yet,
-// for a reason the architecture doc already lists as planned.
+// ccGap records an RFC requirement the library doesn't meet yet, for a
+// reason the architecture doc already lists as planned, as a skipped
+// subtest: a top-level skip still means only that a fixture suite's
+// testdata is missing, which CI checks for.
 func ccGap(t *testing.T, why string) {
 	t.Helper()
-	t.Skip("KNOWN GAP: " + why)
+	t.Run("KNOWN_GAP", func(t *testing.T) { t.Skip("KNOWN GAP: " + why) })
 }
 
 // ccEnforced reports how decoding treats text: "error" when strict

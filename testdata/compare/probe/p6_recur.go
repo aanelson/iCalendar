@@ -423,9 +423,9 @@ func init() {
 		}})
 
 	register(&Probe{ID: "6.08-unbounded-horizon", Group: "6 recurrence",
-		Title: "FREQ=YEARLY;BYMONTH=2;BYDAY=5MO from 2026-01-01 (5th Monday of February: leap years whose Feb 29 is a Monday), all instances",
-		RFC:   "§3.3.10 (numbered BYDAY counts within BYMONTH, errata 1913/3779); no UNTIL/COUNT, so it runs to year 9999. Brute force: 299 instances, 2044 … 9988",
-		Libs:  []string{This, RRuleGo, Emersion},
+		Title:   "FREQ=YEARLY;BYMONTH=2;BYDAY=5MO from 2026-01-01 (5th Monday of February: leap years whose Feb 29 is a Monday), all instances",
+		RFC:     "§3.3.10 (numbered BYDAY counts within BYMONTH, errata 1913/3779); no UNTIL/COUNT, so it runs to year 9999. Brute force: 299 instances, 2044 … 9988",
+		Libs:    []string{This, RRuleGo, Emersion},
 		Timeout: 60,
 		Run: func(lib, _ string) Result {
 			ny := nyLoc()

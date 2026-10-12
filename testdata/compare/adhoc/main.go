@@ -26,7 +26,12 @@ func main() {
 		_, err = ical.Parse(bytes.NewReader([]byte(in)))
 		fmt.Printf("  this Parse: err=%v\n", err)
 		gc, err := ics.ParseCalendar(bytes.NewReader([]byte(in)))
-		fmt.Printf("  golang-ical ParseCalendar: err=%v events=%v\n", err, func() int { if gc == nil { return -1 }; return len(gc.Events()) }())
+		fmt.Printf("  golang-ical ParseCalendar: err=%v events=%v\n", err, func() int {
+			if gc == nil {
+				return -1
+			}
+			return len(gc.Events())
+		}())
 		_, err = eical.NewDecoder(bytes.NewReader([]byte(in))).Decode()
 		fmt.Printf("  emersion Decode: err=%v\n", err)
 	}

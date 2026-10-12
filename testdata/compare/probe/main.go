@@ -40,15 +40,15 @@ type Result struct {
 }
 
 type Probe struct {
-	ID      string   `json:"id"`
-	Group   string   `json:"group"`
-	Title   string   `json:"title"`
-	RFC     string   `json:"rfc"`
-	Libs    []string `json:"libs"`
-	Args    []string `json:"args,omitempty"`    // run once per arg (sizes, …)
-	TZ      []string `json:"tz,omitempty"`      // run once per TZ env value
-	Timeout float64  `json:"timeout"`           // seconds
-	Race    bool     `json:"race,omitempty"`    // needs the -race binary
+	ID      string                       `json:"id"`
+	Group   string                       `json:"group"`
+	Title   string                       `json:"title"`
+	RFC     string                       `json:"rfc"`
+	Libs    []string                     `json:"libs"`
+	Args    []string                     `json:"args,omitempty"` // run once per arg (sizes, …)
+	TZ      []string                     `json:"tz,omitempty"`   // run once per TZ env value
+	Timeout float64                      `json:"timeout"`        // seconds
+	Race    bool                         `json:"race,omitempty"` // needs the -race binary
 	Run     func(lib, arg string) Result `json:"-"`
 }
 
@@ -121,10 +121,10 @@ func safeRun(f func() Result) (r Result) {
 
 func since(t time.Time) float64 { return float64(time.Since(t).Microseconds()) / 1000 }
 
-func pass(got string) Result          { return Result{Outcome: "pass", Got: got} }
-func wrong(got, want string) Result   { return Result{Outcome: "wrong", Got: got, Want: want} }
-func failed(err error) Result         { return Result{Outcome: "error", Detail: err.Error()} }
-func na(why string) Result            { return Result{Outcome: "n/a", Detail: why} }
+func pass(got string) Result        { return Result{Outcome: "pass", Got: got} }
+func wrong(got, want string) Result { return Result{Outcome: "wrong", Got: got, Want: want} }
+func failed(err error) Result       { return Result{Outcome: "error", Detail: err.Error()} }
+func na(why string) Result          { return Result{Outcome: "n/a", Detail: why} }
 func check(got, want string) Result {
 	if got == want {
 		return Result{Outcome: "pass", Got: got, Want: want}

@@ -200,13 +200,13 @@ func init() {
 	// Truncated and malformed lines of the kind the audit found to panic
 	// emersion/go-ical. Pass = an error or a recovery, never a panic.
 	bad := map[string]string{
-		"param-no-colon":       "DTSTART;TZID=America/New_York",
-		"text-after-quote":     `X;A="b"c:v`,
-		"param-at-eof":         "X;A=b",
-		"param-no-equals":      "X;A:v",
-		"quote-unterminated":   `X;A="b:v`,
-		"empty-name":           ":v",
-		"name-only":            "X",
+		"param-no-colon":     "DTSTART;TZID=America/New_York",
+		"text-after-quote":   `X;A="b"c:v`,
+		"param-at-eof":       "X;A=b",
+		"param-no-equals":    "X;A:v",
+		"quote-unterminated": `X;A="b:v`,
+		"empty-name":         ":v",
+		"name-only":          "X",
 	}
 	var keys []string
 	for k := range bad {

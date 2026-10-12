@@ -143,7 +143,7 @@ func init() {
 		register(&Probe{ID: id, Group: "1 parsing", Title: title,
 			RFC:  rfc,
 			Libs: parsers,
-			Run: func(lib, _ string) Result { return truncProbe(lib, []byte(in), empty) }})
+			Run:  func(lib, _ string) Result { return truncProbe(lib, []byte(in), empty) }})
 	}
 	trunc := func(id, title, in string) { truncated(id, title, in, false) }
 	full := string(calWith("", "DTSTART;TZID=America/New_York:20260101T100000", "SUMMARY:x"))
