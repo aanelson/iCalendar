@@ -19,9 +19,9 @@ var ErrLineTooLong = errors.New("contentline: line too long")
 
 // A Reader reads content lines from an input, unfolding them.
 //
-// It accepts CRLF, LF and lone CR line endings, and continuation lines that
-// start with a space or a horizontal tab (RFC 5545 §3.1). A UTF-8 byte-order
-// mark at the very start is skipped.
+// It accepts CRLF, LF and lone CR line endings (only CRLF in Strict mode),
+// and continuation lines that start with a space or a horizontal tab (RFC
+// 5545 §3.1). A UTF-8 byte-order mark at the very start is skipped.
 //
 // By default the Reader recovers from the mistakes real producers make, and
 // reports each one to Warn: a line it can't parse at all is skipped, and
@@ -175,6 +175,8 @@ func (r *Reader) physical() ([]byte, error) {
 			next := end + 1
 			if r.buf[end] == '\r' && next < r.w && r.buf[next] == '\n' {
 				next++
+			} else if r.Strict {
+				return nil, &SyntaxError{Line: r.pos + 1, Msg: "line ends in a bare CR or LF, not CRLF"}
 			}
 			r.r = next
 			r.pos++
@@ -325,15 +327,16 @@ func (r *Reader) parse(b []byte, pos int) (Line, error) {
 		return l, &SyntaxError{Line: pos, Msg: fmt.Sprintf("%s: %s where ';' or ':' should be", l.Name, quoteByte(b, i))}
 	}
 	value := b[i+1:]
-	if r.Strict {
-		for k, c := range value {
-			if isControl(c) {
-				return l, &SyntaxError{Line: pos, Msg: fmt.Sprintf("%s: control character %#02x in the value at byte %d", l.Name, c, k)}
+	for k, c := range value {
+		if isControl(c) {
+			if err := r.deviate(pos, "%s: control character %#02x in the value at byte %d", l.Name, c, k); err != nil {
+				return l, err
 			}
+			break
 		}
-		if !utf8.Valid(value) {
-			return l, &SyntaxError{Line: pos, Msg: l.Name + ": value is not valid UTF-8"}
-		}
+	}
+	if r.Strict && !utf8.Valid(value) {
+		return l, &SyntaxError{Line: pos, Msg: l.Name + ": value is not valid UTF-8"}
 	}
 	l.Value = string(value)
 	return l, nil
@@ -395,13 +398,17 @@ func (r *Reader) checkParamText(v []byte, pos int, prop, param string) error {
 			return r.deviate(pos, "%s: %s: control character %#02x in the value", prop, param, c)
 		}
 	}
+	if r.Strict && !utf8.Valid(v) {
+		return &SyntaxError{Line: pos, Msg: fmt.Sprintf("%s: %s: value is not valid UTF-8", prop, param)}
+	}
 	return nil
 }
 
 func isParamDelim(c byte) bool { return c == ',' || c == ';' || c == ':' }
 
 // decode6868 decodes RFC 6868 parameter value escapes: ^n is a newline, ^'
-// a double quote and ^^ a caret. A caret before anything else is literal.
+// a double quote and ^^ a caret. A caret before anything else, ^N included,
+// is literal.
 func decode6868(s string) string {
 	i := indexByteString(s, '^')
 	if i < 0 {
@@ -413,7 +420,7 @@ func decode6868(s string) string {
 		c := s[i]
 		if c == '^' && i+1 < len(s) {
 			switch s[i+1] {
-			case 'n', 'N':
+			case 'n':
 				out = append(out, '\n')
 				i++
 				continue
