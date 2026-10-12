@@ -1,0 +1,1930 @@
+{
+ "source": "sabre-vobject",
+ "upstream": "https://github.com/sabre-io/vobject",
+ "commit": "5e2f338811916c03927398bb24e527989de63194",
+ "license": "BSD-3-Clause",
+ "path": "tests/VObject/Recur/RRuleIteratorTest.php",
+ "semantics": "sabre/vobject tests/VObject/Recur/RRuleIteratorTest.php, helper parse($rule, $start, $expected, $fastForward=null, $tz='UTC', $runTillTheEnd=false): new RRuleIterator($rule, new DateTime($start, new DateTimeZone($tz))); optional fastForward(new DateTime($fastForward)) (PHP default zone is UTC in the test bootstrap); then collects current()->format('Y-m-d H:i:s') while valid(); for infinite rules (no COUNT/UNTIL) it stops once as many values as expected were collected ('limit'), unless runTillTheEnd. RRuleIterator::rewind() sets the current date to DTSTART, so DTSTART is ALWAYS the first instance even when it does not match the rule, and it counts toward COUNT (include_dtstart=true, RFC 5545 semantics). Values are wall-clock times in $tz: tzid is set for non-UTC zones; for the default 'UTC' zone dtstart/expected carry a Z suffix. A date-only $start means midnight. fastForward(dt) skips instances < dt, so it is recorded as between.start (inclusive, no end; UTC because the PHP default zone is UTC). error=true: the test expects InvalidDataException. Several cases exercise DST gaps (Europe/Zurich, America/New_York): sabre keeps the nominal wall-clock sequence and moves non-existent local times forward by the gap; these expectations are sabre's behaviour where RFC 5545 is not explicit.",
+ "cases": [
+  {
+   "id": "sabre-0001",
+   "name": "testHourly",
+   "dtstart": "20111007T120000Z",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=3;COUNT=12"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20111007T120000Z",
+    "20111007T150000Z",
+    "20111007T180000Z",
+    "20111007T210000Z",
+    "20111008T000000Z",
+    "20111008T030000Z",
+    "20111008T060000Z",
+    "20111008T090000Z",
+    "20111008T120000Z",
+    "20111008T150000Z",
+    "20111008T180000Z",
+    "20111008T210000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 12"
+  },
+  {
+   "id": "sabre-0002",
+   "name": "test2HourlyOnDstTransition [On transition start]",
+   "dtstart": "20230326T000000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=2;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230326T000000",
+    "20230326T030000",
+    "20230326T040000",
+    "20230326T060000",
+    "20230326T080000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 38"
+  },
+  {
+   "id": "sabre-0003",
+   "name": "test2HourlyOnDstTransition [During transition]",
+   "dtstart": "20230326T001500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=2;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230326T001500",
+    "20230326T031500",
+    "20230326T041500",
+    "20230326T061500",
+    "20230326T081500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 38"
+  },
+  {
+   "id": "sabre-0004",
+   "name": "test2HourlyOnDstTransition [On transition end]",
+   "dtstart": "20230326T010000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=2;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230326T010000",
+    "20230326T030000",
+    "20230326T050000",
+    "20230326T070000",
+    "20230326T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 38"
+  },
+  {
+   "id": "sabre-0005",
+   "name": "test2HourlyOnDstTransition [After transition end]",
+   "dtstart": "20230326T011500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=2;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230326T011500",
+    "20230326T031500",
+    "20230326T051500",
+    "20230326T071500",
+    "20230326T091500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 38"
+  },
+  {
+   "id": "sabre-0006",
+   "name": "testHourlyOnDstTransition [On transition start]",
+   "dtstart": "20230325T200000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=6;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230325T200000",
+    "20230326T030000",
+    "20230326T080000",
+    "20230326T140000",
+    "20230326T200000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 97"
+  },
+  {
+   "id": "sabre-0007",
+   "name": "testHourlyOnDstTransition [During transition]",
+   "dtstart": "20230325T201500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=6;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230325T201500",
+    "20230326T031500",
+    "20230326T081500",
+    "20230326T141500",
+    "20230326T201500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 97"
+  },
+  {
+   "id": "sabre-0008",
+   "name": "testHourlyOnDstTransition [On transition end]",
+   "dtstart": "20230325T210000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=6;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230325T210000",
+    "20230326T030000",
+    "20230326T090000",
+    "20230326T150000",
+    "20230326T210000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 97"
+  },
+  {
+   "id": "sabre-0009",
+   "name": "testHourlyOnDstTransition [After transition end]",
+   "dtstart": "20230325T211500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=6;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230325T211500",
+    "20230326T031500",
+    "20230326T091500",
+    "20230326T151500",
+    "20230326T211500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 97"
+  },
+  {
+   "id": "sabre-0010",
+   "name": "testDaily",
+   "dtstart": "20111007T000000Z",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=3;UNTIL=20111025T000000Z"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20111007T000000Z",
+    "20111010T000000Z",
+    "20111013T000000Z",
+    "20111016T000000Z",
+    "20111019T000000Z",
+    "20111022T000000Z",
+    "20111025T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "date-only start '2011-10-07' = midnight; source line 152"
+  },
+  {
+   "id": "sabre-0011",
+   "name": "testDailyByDayByHour",
+   "dtstart": "20111008T060000Z",
+   "rrule": [
+    "FREQ=DAILY;BYDAY=SA,SU;BYHOUR=6,7"
+   ],
+   "include_dtstart": true,
+   "limit": 12,
+   "expected": [
+    "20111008T060000Z",
+    "20111008T070000Z",
+    "20111009T060000Z",
+    "20111009T070000Z",
+    "20111015T060000Z",
+    "20111015T070000Z",
+    "20111016T060000Z",
+    "20111016T070000Z",
+    "20111022T060000Z",
+    "20111022T070000Z",
+    "20111023T060000Z",
+    "20111023T070000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 169"
+  },
+  {
+   "id": "sabre-0012",
+   "name": "testDailyByHour",
+   "dtstart": "20121011T120000Z",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=2;BYHOUR=10,11,12,13,14,15"
+   ],
+   "include_dtstart": true,
+   "limit": 12,
+   "expected": [
+    "20121011T120000Z",
+    "20121011T130000Z",
+    "20121011T140000Z",
+    "20121011T150000Z",
+    "20121013T100000Z",
+    "20121013T110000Z",
+    "20121013T120000Z",
+    "20121013T130000Z",
+    "20121013T140000Z",
+    "20121013T150000Z",
+    "20121015T100000Z",
+    "20121015T110000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 191"
+  },
+  {
+   "id": "sabre-0013",
+   "name": "testDailyByDay",
+   "dtstart": "20111007T120000Z",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=2;BYDAY=TU,WE,FR"
+   ],
+   "include_dtstart": true,
+   "limit": 12,
+   "expected": [
+    "20111007T120000Z",
+    "20111011T120000Z",
+    "20111019T120000Z",
+    "20111021T120000Z",
+    "20111025T120000Z",
+    "20111102T120000Z",
+    "20111104T120000Z",
+    "20111108T120000Z",
+    "20111116T120000Z",
+    "20111118T120000Z",
+    "20111122T120000Z",
+    "20111130T120000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 213"
+  },
+  {
+   "id": "sabre-0014",
+   "name": "testDailyCount",
+   "dtstart": "20140801T180300Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20140801T180300Z",
+    "20140802T180300Z",
+    "20140803T180300Z",
+    "20140804T180300Z",
+    "20140805T180300Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 235"
+  },
+  {
+   "id": "sabre-0015",
+   "name": "testDailyByMonth",
+   "dtstart": "20071004T160000Z",
+   "rrule": [
+    "FREQ=DAILY;BYMONTH=9,10;BYDAY=SU"
+   ],
+   "include_dtstart": true,
+   "between": {
+    "start": "20130928T000000Z",
+    "inclusive": true
+   },
+   "limit": 6,
+   "expected": [
+    "20130929T160000Z",
+    "20131006T160000Z",
+    "20131013T160000Z",
+    "20131020T160000Z",
+    "20131027T160000Z",
+    "20140907T160000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "fastForward(2013-09-28 UTC); source line 250"
+  },
+  {
+   "id": "sabre-0016",
+   "name": "testDailyBySetPosLoop",
+   "dtstart": "20220315T000000Z",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=7;BYDAY=MO"
+   ],
+   "include_dtstart": true,
+   "between": {
+    "start": "20220501T000000Z",
+    "inclusive": true
+   },
+   "expected": [],
+   "error": false,
+   "extensions": [],
+   "comment": "infinite rule but the iterator yields nothing (after fastForward): it must give up on its own rather than loop forever; fastForward(2022-05-01 UTC); date-only start '2022-03-15' = midnight; source line 274"
+  },
+  {
+   "id": "sabre-0017",
+   "name": "testDailyOnDstTransition [On transition start]",
+   "dtstart": "20230324T020000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230324T020000",
+    "20230325T020000",
+    "20230326T030000",
+    "20230327T020000",
+    "20230328T020000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 289"
+  },
+  {
+   "id": "sabre-0018",
+   "name": "testDailyOnDstTransition [During transition]",
+   "dtstart": "20230324T021500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230324T021500",
+    "20230325T021500",
+    "20230326T031500",
+    "20230327T021500",
+    "20230328T021500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 289"
+  },
+  {
+   "id": "sabre-0019",
+   "name": "testDailyOnDstTransition [On transition end]",
+   "dtstart": "20230324T030000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230324T030000",
+    "20230325T030000",
+    "20230326T030000",
+    "20230327T030000",
+    "20230328T030000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 289"
+  },
+  {
+   "id": "sabre-0020",
+   "name": "testDailyOnDstTransition [After transition end]",
+   "dtstart": "20230324T031500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230324T031500",
+    "20230325T031500",
+    "20230326T031500",
+    "20230327T031500",
+    "20230328T031500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 289"
+  },
+  {
+   "id": "sabre-0021",
+   "name": "testWeekly",
+   "dtstart": "20111007T000000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;COUNT=10"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20111007T000000Z",
+    "20111021T000000Z",
+    "20111104T000000Z",
+    "20111118T000000Z",
+    "20111202T000000Z",
+    "20111216T000000Z",
+    "20111230T000000Z",
+    "20120113T000000Z",
+    "20120127T000000Z",
+    "20120210T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 344"
+  },
+  {
+   "id": "sabre-0022",
+   "name": "testWeeklyByDay",
+   "dtstart": "20140801T000000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=1;COUNT=4;BYDAY=MO;WKST=SA"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20140801T000000Z",
+    "20140804T000000Z",
+    "20140811T000000Z",
+    "20140818T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 364"
+  },
+  {
+   "id": "sabre-0023",
+   "name": "testWeeklyByDay2",
+   "dtstart": "20111007T000000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,WE,FR;WKST=SU"
+   ],
+   "include_dtstart": true,
+   "limit": 12,
+   "expected": [
+    "20111007T000000Z",
+    "20111018T000000Z",
+    "20111019T000000Z",
+    "20111021T000000Z",
+    "20111101T000000Z",
+    "20111102T000000Z",
+    "20111104T000000Z",
+    "20111115T000000Z",
+    "20111116T000000Z",
+    "20111118T000000Z",
+    "20111129T000000Z",
+    "20111130T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 378"
+  },
+  {
+   "id": "sabre-0024",
+   "name": "testWeeklyByDayByHour",
+   "dtstart": "20111007T080000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,WE,FR;WKST=MO;BYHOUR=8,9,10"
+   ],
+   "include_dtstart": true,
+   "limit": 15,
+   "expected": [
+    "20111007T080000Z",
+    "20111007T090000Z",
+    "20111007T100000Z",
+    "20111018T080000Z",
+    "20111018T090000Z",
+    "20111018T100000Z",
+    "20111019T080000Z",
+    "20111019T090000Z",
+    "20111019T100000Z",
+    "20111021T080000Z",
+    "20111021T090000Z",
+    "20111021T100000Z",
+    "20111101T080000Z",
+    "20111101T090000Z",
+    "20111101T100000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 400"
+  },
+  {
+   "id": "sabre-0025",
+   "name": "testWeeklyByDaySpecificHour",
+   "dtstart": "20111007T180000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,WE,FR;WKST=SU"
+   ],
+   "include_dtstart": true,
+   "limit": 12,
+   "expected": [
+    "20111007T180000Z",
+    "20111018T180000Z",
+    "20111019T180000Z",
+    "20111021T180000Z",
+    "20111101T180000Z",
+    "20111102T180000Z",
+    "20111104T180000Z",
+    "20111115T180000Z",
+    "20111116T180000Z",
+    "20111118T180000Z",
+    "20111129T180000Z",
+    "20111130T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 425"
+  },
+  {
+   "id": "sabre-0026",
+   "name": "testWeeklyByDaySpecificHourOnDstTransition",
+   "dtstart": "20230311T023000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;BYDAY=SA,SU"
+   ],
+   "include_dtstart": true,
+   "limit": 6,
+   "expected": [
+    "20230311T023000",
+    "20230312T023000",
+    "20230325T023000",
+    "20230326T033000",
+    "20230408T023000",
+    "20230409T023000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 447"
+  },
+  {
+   "id": "sabre-0027",
+   "name": "testWeeklyByDayByHourOnDstTransition",
+   "dtstart": "20230311T020000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;BYDAY=SA,SU;WKST=MO;BYHOUR=2,14"
+   ],
+   "include_dtstart": true,
+   "limit": 11,
+   "expected": [
+    "20230311T020000",
+    "20230311T140000",
+    "20230312T020000",
+    "20230312T140000",
+    "20230325T020000",
+    "20230325T140000",
+    "20230326T140000",
+    "20230408T020000",
+    "20230408T140000",
+    "20230409T020000",
+    "20230409T140000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 465"
+  },
+  {
+   "id": "sabre-0028",
+   "name": "testWeeklyOnDstTransition [On transition start]",
+   "dtstart": "20230312T020000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230312T020000",
+    "20230319T020000",
+    "20230326T030000",
+    "20230402T020000",
+    "20230409T020000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 497"
+  },
+  {
+   "id": "sabre-0029",
+   "name": "testWeeklyOnDstTransition [During transition]",
+   "dtstart": "20230312T021500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230312T021500",
+    "20230319T021500",
+    "20230326T031500",
+    "20230402T021500",
+    "20230409T021500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 497"
+  },
+  {
+   "id": "sabre-0030",
+   "name": "testWeeklyOnDstTransition [On transition end]",
+   "dtstart": "20230312T030000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230312T030000",
+    "20230319T030000",
+    "20230326T030000",
+    "20230402T030000",
+    "20230409T030000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 497"
+  },
+  {
+   "id": "sabre-0031",
+   "name": "testWeeklyOnDstTransition [After transition end]",
+   "dtstart": "20230312T031500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230312T031500",
+    "20230319T031500",
+    "20230326T031500",
+    "20230402T031500",
+    "20230409T031500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 497"
+  },
+  {
+   "id": "sabre-0032",
+   "name": "testMonthly",
+   "dtstart": "20111205T000000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=3;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20111205T000000Z",
+    "20120305T000000Z",
+    "20120605T000000Z",
+    "20120905T000000Z",
+    "20121205T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 552"
+  },
+  {
+   "id": "sabre-0033",
+   "name": "testMonthlyEndOfMonth",
+   "dtstart": "20111231T000000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=2;COUNT=12"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20111231T000000Z",
+    "20120831T000000Z",
+    "20121031T000000Z",
+    "20121231T000000Z",
+    "20130831T000000Z",
+    "20131031T000000Z",
+    "20131231T000000Z",
+    "20140831T000000Z",
+    "20141031T000000Z",
+    "20141231T000000Z",
+    "20150831T000000Z",
+    "20151031T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 567"
+  },
+  {
+   "id": "sabre-0034",
+   "name": "testMonthlyByMonthDay",
+   "dtstart": "20110101T000000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=5;COUNT=9;BYMONTHDAY=1,31,-7"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20110101T000000Z",
+    "20110125T000000Z",
+    "20110131T000000Z",
+    "20110601T000000Z",
+    "20110624T000000Z",
+    "20111101T000000Z",
+    "20111124T000000Z",
+    "20120401T000000Z",
+    "20120424T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 589"
+  },
+  {
+   "id": "sabre-0035",
+   "name": "testMonthlyByMonthDayDstTransition",
+   "dtstart": "20230101T021500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=1;COUNT=8;BYMONTHDAY=1,26"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230101T021500",
+    "20230126T021500",
+    "20230201T021500",
+    "20230226T021500",
+    "20230301T021500",
+    "20230326T031500",
+    "20230401T021500",
+    "20230426T021500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 608"
+  },
+  {
+   "id": "sabre-0036",
+   "name": "testMonthlyByDay",
+   "dtstart": "20110103T000000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=2;COUNT=16;BYDAY=MO,-2TU,+1WE,3TH"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20110103T000000Z",
+    "20110105T000000Z",
+    "20110110T000000Z",
+    "20110117T000000Z",
+    "20110118T000000Z",
+    "20110120T000000Z",
+    "20110124T000000Z",
+    "20110131T000000Z",
+    "20110302T000000Z",
+    "20110307T000000Z",
+    "20110314T000000Z",
+    "20110317T000000Z",
+    "20110321T000000Z",
+    "20110322T000000Z",
+    "20110328T000000Z",
+    "20110502T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 628"
+  },
+  {
+   "id": "sabre-0037",
+   "name": "testMonthlyByDayUntil",
+   "dtstart": "20210210T000000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=1;BYDAY=WE;WKST=WE;UNTIL=20210317T000000Z"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20210210T000000Z",
+    "20210217T000000Z",
+    "20210224T000000Z",
+    "20210303T000000Z",
+    "20210310T000000Z",
+    "20210317T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 654"
+  },
+  {
+   "id": "sabre-0038",
+   "name": "testMonthlyByDayOnDstTransition",
+   "dtstart": "20230101T023000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=2;COUNT=13;BYDAY=SU"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230101T023000",
+    "20230108T023000",
+    "20230115T023000",
+    "20230122T023000",
+    "20230129T023000",
+    "20230305T023000",
+    "20230312T023000",
+    "20230319T023000",
+    "20230326T033000",
+    "20230507T023000",
+    "20230514T023000",
+    "20230521T023000",
+    "20230528T023000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 670"
+  },
+  {
+   "id": "sabre-0039",
+   "name": "testMonthlyByDayUntilWithImpossibleNextOccurrence",
+   "dtstart": "20210210T000000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=1;BYDAY=2WE;BYMONTHDAY=2;WKST=WE;UNTIL=20210317T000000Z"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20210210T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 695"
+  },
+  {
+   "id": "sabre-0040",
+   "name": "testMonthlyByDayByMonthDay",
+   "dtstart": "20110801T000000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=10;BYDAY=MO;BYMONTHDAY=1"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20110801T000000Z",
+    "20121001T000000Z",
+    "20130401T000000Z",
+    "20130701T000000Z",
+    "20140901T000000Z",
+    "20141201T000000Z",
+    "20150601T000000Z",
+    "20160201T000000Z",
+    "20160801T000000Z",
+    "20170501T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 706"
+  },
+  {
+   "id": "sabre-0041",
+   "name": "testMonthlyByDayBySetPos",
+   "dtstart": "20110103T000000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=10;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=1,-1"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20110103T000000Z",
+    "20110131T000000Z",
+    "20110201T000000Z",
+    "20110228T000000Z",
+    "20110301T000000Z",
+    "20110331T000000Z",
+    "20110401T000000Z",
+    "20110429T000000Z",
+    "20110502T000000Z",
+    "20110531T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 726"
+  },
+  {
+   "id": "sabre-0042",
+   "name": "testMonthlyOnDstTransition [On transition start]",
+   "dtstart": "20230126T020000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230126T020000",
+    "20230226T020000",
+    "20230326T030000",
+    "20230426T020000",
+    "20230526T020000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 750"
+  },
+  {
+   "id": "sabre-0043",
+   "name": "testMonthlyOnDstTransition [During transition]",
+   "dtstart": "20230126T021500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230126T021500",
+    "20230226T021500",
+    "20230326T031500",
+    "20230426T021500",
+    "20230526T021500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 750"
+  },
+  {
+   "id": "sabre-0044",
+   "name": "testMonthlyOnDstTransition [On transition end]",
+   "dtstart": "20230126T030000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230126T030000",
+    "20230226T030000",
+    "20230326T030000",
+    "20230426T030000",
+    "20230526T030000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 750"
+  },
+  {
+   "id": "sabre-0045",
+   "name": "testMonthlyOnDstTransition [After transition end]",
+   "dtstart": "20230126T031500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230126T031500",
+    "20230226T031500",
+    "20230326T031500",
+    "20230426T031500",
+    "20230526T031500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 750"
+  },
+  {
+   "id": "sabre-0046",
+   "name": "testMonthlyOnDstTransition [During transition on 31st day of month]",
+   "dtstart": "20240131T021500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20240131T021500",
+    "20240331T031500",
+    "20240531T021500",
+    "20240731T021500",
+    "20240831T021500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 750"
+  },
+  {
+   "id": "sabre-0047",
+   "name": "testYearly",
+   "dtstart": "20110101T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=10;INTERVAL=3"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20110101T000000Z",
+    "20140101T000000Z",
+    "20170101T000000Z",
+    "20200101T000000Z",
+    "20230101T000000Z",
+    "20260101T000000Z",
+    "20290101T000000Z",
+    "20320101T000000Z",
+    "20350101T000000Z",
+    "20380101T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 815"
+  },
+  {
+   "id": "sabre-0048",
+   "name": "testYearlyLeapYear",
+   "dtstart": "20120229T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20120229T000000Z",
+    "20160229T000000Z",
+    "20200229T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 835"
+  },
+  {
+   "id": "sabre-0049",
+   "name": "testYearlyByMonth",
+   "dtstart": "20110407T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=8;INTERVAL=4;BYMONTH=4,10"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20110407T000000Z",
+    "20111007T000000Z",
+    "20150407T000000Z",
+    "20151007T000000Z",
+    "20190407T000000Z",
+    "20191007T000000Z",
+    "20230407T000000Z",
+    "20231007T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 848"
+  },
+  {
+   "id": "sabre-0050",
+   "name": "testYearlyByMonthOnDstTransition",
+   "dtstart": "20190326T023000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=8;INTERVAL=2;BYMONTH=3,9"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20190326T023000",
+    "20190926T023000",
+    "20210326T023000",
+    "20210926T023000",
+    "20230326T033000",
+    "20230926T023000",
+    "20250326T023000",
+    "20250926T023000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 866"
+  },
+  {
+   "id": "sabre-0051",
+   "name": "testYearlyByMonthInvalidValue1",
+   "dtstart": "20110407T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=6;BYMONTHDAY=24;BYMONTH=0"
+   ],
+   "include_dtstart": true,
+   "expected": [],
+   "error": true,
+   "extensions": [],
+   "comment": "source expects InvalidDataException; source line 886"
+  },
+  {
+   "id": "sabre-0052",
+   "name": "testYearlyByMonthInvalidValue2",
+   "dtstart": "20110407T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=6;BYMONTHDAY=24;BYMONTH=bla"
+   ],
+   "include_dtstart": true,
+   "expected": [],
+   "error": true,
+   "extensions": [],
+   "comment": "source expects InvalidDataException; source line 896"
+  },
+  {
+   "id": "sabre-0053",
+   "name": "testYearlyByMonthManyInvalidValues",
+   "dtstart": "20110407T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=6;BYMONTHDAY=24;BYMONTH=0,bla"
+   ],
+   "include_dtstart": true,
+   "expected": [],
+   "error": true,
+   "extensions": [],
+   "comment": "source expects InvalidDataException; source line 906"
+  },
+  {
+   "id": "sabre-0054",
+   "name": "testYearlyByMonthEmptyValue",
+   "dtstart": "20110407T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=6;BYMONTHDAY=24;BYMONTH="
+   ],
+   "include_dtstart": true,
+   "expected": [],
+   "error": true,
+   "extensions": [],
+   "comment": "source expects InvalidDataException; source line 916"
+  },
+  {
+   "id": "sabre-0055",
+   "name": "testYearlyByMonthByDay",
+   "dtstart": "20110404T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=8;INTERVAL=5;BYMONTH=4,10;BYDAY=1MO,-1SU"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20110404T000000Z",
+    "20110424T000000Z",
+    "20111003T000000Z",
+    "20111030T000000Z",
+    "20160404T000000Z",
+    "20160424T000000Z",
+    "20161003T000000Z",
+    "20161030T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 926"
+  },
+  {
+   "id": "sabre-0056",
+   "name": "testYearlyByMonthByDayOnDstTransition",
+   "dtstart": "20210307T023000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=13;INTERVAL=2;BYMONTH=3;BYDAY=SU"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20210307T023000",
+    "20210314T023000",
+    "20210321T023000",
+    "20210328T033000",
+    "20230305T023000",
+    "20230312T023000",
+    "20230319T023000",
+    "20230326T033000",
+    "20250302T023000",
+    "20250309T023000",
+    "20250316T023000",
+    "20250323T023000",
+    "20250330T033000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 944"
+  },
+  {
+   "id": "sabre-0057",
+   "name": "testYearlyNewYearsDay",
+   "dtstart": "20110101T030700Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=7;INTERVAL=2;BYYEARDAY=1"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20110101T030700Z",
+    "20130101T030700Z",
+    "20150101T030700Z",
+    "20170101T030700Z",
+    "20190101T030700Z",
+    "20210101T030700Z",
+    "20230101T030700Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 969"
+  },
+  {
+   "id": "sabre-0058",
+   "name": "testYearlyByYearDay",
+   "dtstart": "20110709T030700Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=7;INTERVAL=2;BYYEARDAY=190"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20110709T030700Z",
+    "20130709T030700Z",
+    "20150709T030700Z",
+    "20170709T030700Z",
+    "20190709T030700Z",
+    "20210709T030700Z",
+    "20230709T030700Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 986"
+  },
+  {
+   "id": "sabre-0059",
+   "name": "testYearlyByYearDayMultiple",
+   "dtstart": "20110710T145311Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=8;INTERVAL=3;BYYEARDAY=190,301"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20110710T145311Z",
+    "20111028T145311Z",
+    "20140709T145311Z",
+    "20141028T145311Z",
+    "20170709T145311Z",
+    "20171028T145311Z",
+    "20200708T145311Z",
+    "20201027T145311Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1022"
+  },
+  {
+   "id": "sabre-0060",
+   "name": "testYearlyByYearDayByDay",
+   "dtstart": "20010407T145311Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=6;BYYEARDAY=97;BYDAY=SA"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20010407T145311Z",
+    "20070407T145311Z",
+    "20180407T145311Z",
+    "20240406T145311Z",
+    "20290407T145311Z",
+    "20350407T145311Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1040"
+  },
+  {
+   "id": "sabre-0061",
+   "name": "testYearlyByYearDayNegative",
+   "dtstart": "20010926T145311Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=8;BYYEARDAY=-97,-5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20010926T145311Z",
+    "20011227T145311Z",
+    "20020926T145311Z",
+    "20021227T145311Z",
+    "20030926T145311Z",
+    "20031227T145311Z",
+    "20040926T145311Z",
+    "20041227T145311Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1056"
+  },
+  {
+   "id": "sabre-0062",
+   "name": "testYearlyByYearDayLargeNegative",
+   "dtstart": "20010101T145311Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=8;BYYEARDAY=-365"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20010101T145311Z",
+    "20020101T145311Z",
+    "20030101T145311Z",
+    "20040102T145311Z",
+    "20050101T145311Z",
+    "20060101T145311Z",
+    "20070101T145311Z",
+    "20080102T145311Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1078"
+  },
+  {
+   "id": "sabre-0063",
+   "name": "testYearlyByYearDayMaxNegative",
+   "dtstart": "20010101T145311Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=8;BYYEARDAY=-366"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20010101T145311Z",
+    "20011231T145311Z",
+    "20021231T145311Z",
+    "20040101T145311Z",
+    "20041231T145311Z",
+    "20051231T145311Z",
+    "20061231T145311Z",
+    "20080101T145311Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1103"
+  },
+  {
+   "id": "sabre-0064",
+   "name": "testYearlyByYearDayInvalid390",
+   "dtstart": "20110407T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=8;INTERVAL=4;BYYEARDAY=390"
+   ],
+   "include_dtstart": true,
+   "expected": [],
+   "error": true,
+   "extensions": [],
+   "comment": "source expects InvalidDataException; source line 1121"
+  },
+  {
+   "id": "sabre-0065",
+   "name": "testYearlyByYearDayInvalid0",
+   "dtstart": "20110407T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=8;INTERVAL=4;BYYEARDAY=0"
+   ],
+   "include_dtstart": true,
+   "expected": [],
+   "error": true,
+   "extensions": [],
+   "comment": "source expects InvalidDataException; source line 1132"
+  },
+  {
+   "id": "sabre-0066",
+   "name": "testYearlyByDayByWeekNo",
+   "dtstart": "20210101T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYDAY=MO;BYWEEKNO=13,15,50"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20210101T000000Z",
+    "20210329T000000Z",
+    "20210412T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1143"
+  },
+  {
+   "id": "sabre-0067",
+   "name": "testYearlyOnDstTransition [On transition start]",
+   "dtstart": "20210326T020000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20210326T020000",
+    "20220326T020000",
+    "20230326T030000",
+    "20240326T020000",
+    "20250326T020000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1160"
+  },
+  {
+   "id": "sabre-0068",
+   "name": "testYearlyOnDstTransition [During transition]",
+   "dtstart": "20210326T021500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20210326T021500",
+    "20220326T021500",
+    "20230326T031500",
+    "20240326T021500",
+    "20250326T021500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1160"
+  },
+  {
+   "id": "sabre-0069",
+   "name": "testYearlyOnDstTransition [On transition end]",
+   "dtstart": "20210326T030000",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20210326T030000",
+    "20220326T030000",
+    "20230326T030000",
+    "20240326T030000",
+    "20250326T030000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1160"
+  },
+  {
+   "id": "sabre-0070",
+   "name": "testYearlyOnDstTransition [After transition end]",
+   "dtstart": "20210326T031500",
+   "tzid": "Europe/Zurich",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=1;COUNT=5"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20210326T031500",
+    "20220326T031500",
+    "20230326T031500",
+    "20240326T031500",
+    "20250326T031500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1160"
+  },
+  {
+   "id": "sabre-0071",
+   "name": "testFastForward",
+   "dtstart": "20110404T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=8;INTERVAL=5;BYMONTH=4,10;BYDAY=1MO,-1SU"
+   ],
+   "include_dtstart": true,
+   "between": {
+    "start": "20200505T000000Z",
+    "inclusive": true
+   },
+   "expected": [],
+   "error": false,
+   "extensions": [],
+   "comment": "fastForward(2020-05-05 00:00:00 UTC); source line 1215"
+  },
+  {
+   "id": "sabre-0072",
+   "name": "testFifthTuesdayProblem",
+   "dtstart": "20071004T144642Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=1;UNTIL=20071030T035959Z;BYDAY=5TU"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20071004T144642Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1237"
+  },
+  {
+   "id": "sabre-0073",
+   "name": "testFastForwardTooFar",
+   "dtstart": "20090420T180000Z",
+   "rrule": [
+    "FREQ=WEEKLY;BYDAY=MO;UNTIL=20090704T205959Z;INTERVAL=1"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20090420T180000Z",
+    "20090427T180000Z",
+    "20090504T180000Z",
+    "20090511T180000Z",
+    "20090518T180000Z",
+    "20090525T180000Z",
+    "20090601T180000Z",
+    "20090608T180000Z",
+    "20090615T180000Z",
+    "20090622T180000Z",
+    "20090629T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1252"
+  },
+  {
+   "id": "sabre-0074",
+   "name": "testValidByWeekNo",
+   "dtstart": "20110207T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;BYWEEKNO=20;BYDAY=TU"
+   ],
+   "include_dtstart": true,
+   "limit": 12,
+   "expected": [
+    "20110207T000000Z",
+    "20110517T000000Z",
+    "20120515T000000Z",
+    "20130514T000000Z",
+    "20140513T000000Z",
+    "20150512T000000Z",
+    "20160517T000000Z",
+    "20170516T000000Z",
+    "20180515T000000Z",
+    "20190514T000000Z",
+    "20200512T000000Z",
+    "20210518T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1273"
+  },
+  {
+   "id": "sabre-0075",
+   "name": "testNegativeValidByWeekNo",
+   "dtstart": "20110902T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;BYWEEKNO=-20;BYDAY=TU,FR"
+   ],
+   "include_dtstart": true,
+   "limit": 12,
+   "expected": [
+    "20110902T000000Z",
+    "20120807T000000Z",
+    "20120810T000000Z",
+    "20130806T000000Z",
+    "20130809T000000Z",
+    "20140805T000000Z",
+    "20140808T000000Z",
+    "20150811T000000Z",
+    "20150814T000000Z",
+    "20160809T000000Z",
+    "20160812T000000Z",
+    "20170808T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1295"
+  },
+  {
+   "id": "sabre-0076",
+   "name": "testTwoValidByWeekNo",
+   "dtstart": "20110907T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;BYWEEKNO=20;BYDAY=TU,FR"
+   ],
+   "include_dtstart": true,
+   "limit": 12,
+   "expected": [
+    "20110907T090000Z",
+    "20120515T090000Z",
+    "20120518T090000Z",
+    "20130514T090000Z",
+    "20130517T090000Z",
+    "20140513T090000Z",
+    "20140516T090000Z",
+    "20150512T090000Z",
+    "20150515T090000Z",
+    "20160517T090000Z",
+    "20160520T090000Z",
+    "20170516T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1317"
+  },
+  {
+   "id": "sabre-0077",
+   "name": "testValidByWeekNoByDayDefault",
+   "dtstart": "20110516T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;BYWEEKNO=20"
+   ],
+   "include_dtstart": true,
+   "limit": 12,
+   "expected": [
+    "20110516T000000Z",
+    "20120514T000000Z",
+    "20130513T000000Z",
+    "20140512T000000Z",
+    "20150511T000000Z",
+    "20160516T000000Z",
+    "20170515T000000Z",
+    "20180514T000000Z",
+    "20190513T000000Z",
+    "20200511T000000Z",
+    "20210517T000000Z",
+    "20220516T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1339"
+  },
+  {
+   "id": "sabre-0078",
+   "name": "testMultipleValidByWeekNo",
+   "dtstart": "20110116T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;BYWEEKNO=20,50;BYDAY=TU,FR"
+   ],
+   "include_dtstart": true,
+   "limit": 12,
+   "expected": [
+    "20110116T000000Z",
+    "20110517T000000Z",
+    "20110520T000000Z",
+    "20111213T000000Z",
+    "20111216T000000Z",
+    "20120515T000000Z",
+    "20120518T000000Z",
+    "20121211T000000Z",
+    "20121214T000000Z",
+    "20130514T000000Z",
+    "20130517T000000Z",
+    "20131210T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1361"
+  },
+  {
+   "id": "sabre-0079",
+   "name": "testInvalidByWeekNo",
+   "dtstart": "20110516T000000Z",
+   "rrule": [
+    "FREQ=YEARLY;BYWEEKNO=54"
+   ],
+   "include_dtstart": true,
+   "expected": [],
+   "error": true,
+   "extensions": [],
+   "comment": "source expects InvalidDataException; source line 1383"
+  },
+  {
+   "id": "sabre-0080",
+   "name": "testYearlyByMonthLoop",
+   "dtstart": "20120101T154500Z",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=1;UNTIL=20120203T225959Z;BYMONTH=2;BYSETPOS=1;BYDAY=SU,MO,TU,WE,TH,FR,SA"
+   ],
+   "include_dtstart": true,
+   "between": {
+    "start": "20120129T230000Z",
+    "inclusive": true
+   },
+   "expected": [
+    "20120201T154500Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "fastForward(2012-01-29 23:00:00 UTC); source line 1397"
+  },
+  {
+   "id": "sabre-0081",
+   "name": "testYearlyBySetPosLoop",
+   "dtstart": "20220303T154500Z",
+   "rrule": [
+    "FREQ=YEARLY;BYMONTH=5;BYSETPOS=3;BYMONTHDAY=3"
+   ],
+   "include_dtstart": true,
+   "between": {
+    "start": "20220501T000000Z",
+    "inclusive": true
+   },
+   "expected": [],
+   "error": false,
+   "extensions": [],
+   "comment": "infinite rule but the iterator yields nothing (after fastForward): it must give up on its own rather than loop forever; fastForward(2022-05-01 UTC); source line 1416"
+  },
+  {
+   "id": "sabre-0082",
+   "name": "testYearlyStartDateNotOnRRuleList",
+   "dtstart": "20230901T120000Z",
+   "rrule": [
+    "FREQ=YEARLY;BYMONTH=6;BYDAY=-1FR;UNTIL=20250901T000000Z"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230901T120000Z",
+    "20240628T120000Z",
+    "20250627T120000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1434"
+  },
+  {
+   "id": "sabre-0083",
+   "name": "testYearlyStartDateNotOnRRuleList",
+   "dtstart": "20230601T120000Z",
+   "rrule": [
+    "FREQ=YEARLY;BYMONTH=6;BYDAY=-1FR;UNTIL=20250901T000000Z"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230601T120000Z",
+    "20230630T120000Z",
+    "20240628T120000Z",
+    "20250627T120000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1434"
+  },
+  {
+   "id": "sabre-0084",
+   "name": "testYearlyStartDateNotOnRRuleList",
+   "dtstart": "20230501T120000Z",
+   "rrule": [
+    "FREQ=YEARLY;BYMONTH=6;BYDAY=-1FR;UNTIL=20250901T000000Z"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20230501T120000Z",
+    "20230630T120000Z",
+    "20240628T120000Z",
+    "20250627T120000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1434"
+  },
+  {
+   "id": "sabre-0085",
+   "name": "testZeroInterval",
+   "dtstart": "20120824T145700Z",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=0"
+   ],
+   "include_dtstart": true,
+   "between": {
+    "start": "20130101T230000Z",
+    "inclusive": true
+   },
+   "expected": [],
+   "error": true,
+   "extensions": [],
+   "comment": "source expects InvalidDataException; fastForward(2013-01-01 23:00:00 UTC); source line 1479"
+  },
+  {
+   "id": "sabre-0086",
+   "name": "testInvalidFreq",
+   "dtstart": "20111007T000000Z",
+   "rrule": [
+    "FREQ=SMONTHLY;INTERVAL=3;UNTIL=20111025T000000Z"
+   ],
+   "include_dtstart": true,
+   "expected": [],
+   "error": true,
+   "extensions": [],
+   "comment": "source expects InvalidDataException; date-only start '2011-10-07' = midnight; source line 1490"
+  },
+  {
+   "id": "sabre-0087",
+   "name": "testByDayBadOffset",
+   "dtstart": "20140801T000000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=1;COUNT=4;BYDAY=0MO;WKST=SA"
+   ],
+   "include_dtstart": true,
+   "expected": [],
+   "error": true,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-WEEKLY"
+   ],
+   "comment": "source expects InvalidDataException; source line 1500"
+  },
+  {
+   "id": "sabre-0088",
+   "name": "testUntilBeginHasTimezone",
+   "dtstart": "20130923T183000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=WEEKLY;UNTIL=20131118T183000"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20130923T183000",
+    "20130930T183000",
+    "20131007T183000",
+    "20131014T183000",
+    "20131021T183000",
+    "20131028T183000",
+    "20131104T183000",
+    "20131111T183000",
+    "20131118T183000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1510"
+  },
+  {
+   "id": "sabre-0089",
+   "name": "testUntilBeforeDtStart",
+   "dtstart": "20140802T001500Z",
+   "rrule": [
+    "FREQ=DAILY;UNTIL=20140101T000000Z"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20140802T001500Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1531"
+  },
+  {
+   "id": "sabre-0090",
+   "name": "testIgnoredStuff",
+   "dtstart": "20140802T001500Z",
+   "rrule": [
+    "FREQ=DAILY;BYSECOND=1;BYMINUTE=1;BYYEARDAY=1;BYWEEKNO=1;COUNT=2"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20140802T001500Z",
+    "20140803T001500Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-DAILY",
+    "NONSTANDARD:BYYEARDAY-WITH-DAILY"
+   ],
+   "comment": "source line 1542"
+  },
+  {
+   "id": "sabre-0091",
+   "name": "testMinusFifthThursday",
+   "dtstart": "20150101T001500Z",
+   "rrule": [
+    "FREQ=MONTHLY;BYDAY=-4TH,-5TH;COUNT=4"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20150101T001500Z",
+    "20150108T001500Z",
+    "20150205T001500Z",
+    "20150305T001500Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1554"
+  },
+  {
+   "id": "sabre-0092",
+   "name": "testNeverEnding",
+   "dtstart": "20150101T001500Z",
+   "rrule": [
+    "FREQ=MONTHLY;BYDAY=2TU;BYSETPOS=2"
+   ],
+   "include_dtstart": true,
+   "expected": [
+    "20150101T001500Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "runTillTheEnd=true: the iterator must terminate on its own after these instances; source line 1575"
+  },
+  {
+   "id": "sabre-0093",
+   "name": "testUnsupportedPart",
+   "dtstart": "20140802T001500Z",
+   "rrule": [
+    "FREQ=DAILY;BYWODAN=1"
+   ],
+   "include_dtstart": true,
+   "expected": [],
+   "error": true,
+   "extensions": [],
+   "comment": "source expects InvalidDataException; source line 1589"
+  }
+ ]
+}

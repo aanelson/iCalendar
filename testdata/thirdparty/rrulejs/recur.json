@@ -1,0 +1,4141 @@
+{
+ "source": "rrulejs",
+ "upstream": "https://github.com/jkbrzt/rrule",
+ "commit": "9f2061febeeb363d03352efe33d30c33073a0242",
+ "license": "BSD-3-Clause",
+ "path": "test/rrule.test.ts",
+ "semantics": "rrule.js (jkbrzt/rrule, a JavaScript port of python-dateutil) test/rrule.test.ts testRecurring(msg, rule | {rrule, method, args}, expected). new RRule({...}) options were mapped to RRULE text like the dateutil source (freq, interval, count, until, wkst, bysetpos, bymonth, bymonthday, byyearday, byweekno, byweekday (RRule.TU.nth(-1) -> -1TU), byhour, byminute, bysecond, byeaster -> BYEASTER + extensions). rrule.js datetime(y,m,d,h,mi,s) and parse('YYYYMMDDTHHMMSS') build UTC JS Dates, so every value here carries a Z suffix. Like dateutil, DTSTART is NOT emitted unless it matches the rule (include_dtstart=false). method 'all' -> full list; 'between'(a, b, inc) -> between (exclusive unless inc); 'after'(dt, inc) -> between.start + limit 1. The upstream assertDatesEqual() only checks the length when more than one date is expected, so cases with a single expected date and method 'all' get limit=1 (only the first instance is compared), and cases with no expected dates are skipped (nothing is asserted). Most cases duplicate dateutil's suite.",
+ "cases": [
+  {
+   "id": "rrulejs-0001",
+   "name": "missing Feb 28 https://github.com/jakubroztocil/rrule/issues/21",
+   "dtstart": "20130101T000000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=28"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "20130128T000000Z",
+    "20130228T000000Z",
+    "20130328T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 65"
+  },
+  {
+   "id": "rrulejs-0002",
+   "name": "testAfter",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY"
+   ],
+   "include_dtstart": false,
+   "between": {
+    "start": "19970904T090000Z",
+    "inclusive": false
+   },
+   "limit": 1,
+   "expected": [
+    "19970905T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 106"
+  },
+  {
+   "id": "rrulejs-0003",
+   "name": "testAfterInc",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY"
+   ],
+   "include_dtstart": false,
+   "between": {
+    "start": "19970904T090000Z",
+    "inclusive": true
+   },
+   "limit": 1,
+   "expected": [
+    "19970904T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 119"
+  },
+  {
+   "id": "rrulejs-0004",
+   "name": "testBetween",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY"
+   ],
+   "include_dtstart": false,
+   "between": {
+    "start": "19970902T090000Z",
+    "end": "19970906T090000Z",
+    "inclusive": false
+   },
+   "expected": [
+    "19970903T090000Z",
+    "19970904T090000Z",
+    "19970905T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 132"
+  },
+  {
+   "id": "rrulejs-0005",
+   "name": "testBetweenInc",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY"
+   ],
+   "include_dtstart": false,
+   "between": {
+    "start": "19970902T090000Z",
+    "end": "19970906T090000Z",
+    "inclusive": true
+   },
+   "expected": [
+    "19970902T090000Z",
+    "19970903T090000Z",
+    "19970904T090000Z",
+    "19970905T090000Z",
+    "19970906T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 149"
+  },
+  {
+   "id": "rrulejs-0006",
+   "name": "testYearly",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19980902T090000Z",
+    "19990902T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 189"
+  },
+  {
+   "id": "rrulejs-0007",
+   "name": "testYearlyInterval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=2;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19990902T090000Z",
+    "20010902T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 203"
+  },
+  {
+   "id": "rrulejs-0008",
+   "name": "testYearlyIntervalLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=100;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "20970902T090000Z",
+    "21970902T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 218"
+  },
+  {
+   "id": "rrulejs-0009",
+   "name": "testYearlyByMonth",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980102T090000Z",
+    "19980302T090000Z",
+    "19990102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 233"
+  },
+  {
+   "id": "rrulejs-0010",
+   "name": "testYearlyByMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTHDAY=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T090000Z",
+    "19971001T090000Z",
+    "19971003T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 248"
+  },
+  {
+   "id": "rrulejs-0011",
+   "name": "testYearlyByMonthAndMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T090000Z",
+    "19980107T090000Z",
+    "19980305T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 263"
+  },
+  {
+   "id": "rrulejs-0012",
+   "name": "testYearlyByWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 279"
+  },
+  {
+   "id": "rrulejs-0013",
+   "name": "testYearlyByNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971225T090000Z",
+    "19980106T090000Z",
+    "19981231T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 294"
+  },
+  {
+   "id": "rrulejs-0014",
+   "name": "testYearlyByNWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYDAY=13TU,-13TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971002T090000Z",
+    "19980331T090000Z",
+    "19981008T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 309"
+  },
+  {
+   "id": "rrulejs-0015",
+   "name": "testYearlyByMonthAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980106T090000Z",
+    "19980108T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 324"
+  },
+  {
+   "id": "rrulejs-0016",
+   "name": "testYearlyByMonthAndNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980106T090000Z",
+    "19980129T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 340"
+  },
+  {
+   "id": "rrulejs-0017",
+   "name": "testYearlyByMonthAndNWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYDAY=3TU,-3TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980115T090000Z",
+    "19980120T090000Z",
+    "19980312T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 356"
+  },
+  {
+   "id": "rrulejs-0018",
+   "name": "testYearlyByMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980203T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 372"
+  },
+  {
+   "id": "rrulejs-0019",
+   "name": "testYearlyByMonthAndMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980303T090000Z",
+    "20010301T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 388"
+  },
+  {
+   "id": "rrulejs-0020",
+   "name": "testYearlyByYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=4;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19980101T090000Z",
+    "19980410T090000Z",
+    "19980719T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 405"
+  },
+  {
+   "id": "rrulejs-0021",
+   "name": "testYearlyByYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=4;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19980101T090000Z",
+    "19980410T090000Z",
+    "19980719T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 421"
+  },
+  {
+   "id": "rrulejs-0022",
+   "name": "testYearlyByMonthAndYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T090000Z",
+    "19980719T090000Z",
+    "19990410T090000Z",
+    "19990719T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 437"
+  },
+  {
+   "id": "rrulejs-0023",
+   "name": "testYearlyByMonthAndYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T090000Z",
+    "19980719T090000Z",
+    "19990410T090000Z",
+    "19990719T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 454"
+  },
+  {
+   "id": "rrulejs-0024",
+   "name": "testYearlyByWeekNo",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYWEEKNO=20"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980511T090000Z",
+    "19980512T090000Z",
+    "19980513T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 471"
+  },
+  {
+   "id": "rrulejs-0025",
+   "name": "testYearlyByWeekNoAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYWEEKNO=1;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971229T090000Z",
+    "19990104T090000Z",
+    "20000103T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 486"
+  },
+  {
+   "id": "rrulejs-0026",
+   "name": "testYearlyByWeekNoAndWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYWEEKNO=52;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T090000Z",
+    "19981227T090000Z",
+    "20000102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 504"
+  },
+  {
+   "id": "rrulejs-0027",
+   "name": "testYearlyByWeekNoAndWeekDayLast",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYWEEKNO=-1;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T090000Z",
+    "19990103T090000Z",
+    "20000102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 522"
+  },
+  {
+   "id": "rrulejs-0028",
+   "name": "testYearlyByEaster",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYEASTER=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980412T090000Z",
+    "19990404T090000Z",
+    "20000423T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "freq omitted in the source; rrule.js defaults to YEARLY; rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 538"
+  },
+  {
+   "id": "rrulejs-0029",
+   "name": "testYearlyByEasterPos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYEASTER=1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980413T090000Z",
+    "19990405T090000Z",
+    "20000424T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 548"
+  },
+  {
+   "id": "rrulejs-0030",
+   "name": "testYearlyByEasterNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYEASTER=-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980411T090000Z",
+    "19990403T090000Z",
+    "20000422T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 563"
+  },
+  {
+   "id": "rrulejs-0031",
+   "name": "testYearlyByWeekNoAndWeekDay53",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYWEEKNO=53;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19981228T090000Z",
+    "20041227T090000Z",
+    "20091228T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 578"
+  },
+  {
+   "id": "rrulejs-0032",
+   "name": "testYearlyByHour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19980902T060000Z",
+    "19980902T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 594"
+  },
+  {
+   "id": "rrulejs-0033",
+   "name": "testYearlyByMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19980902T090600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 609"
+  },
+  {
+   "id": "rrulejs-0034",
+   "name": "testYearlyBySecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19980902T090006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 624"
+  },
+  {
+   "id": "rrulejs-0035",
+   "name": "testYearlyByHourAndMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19980902T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 639"
+  },
+  {
+   "id": "rrulejs-0036",
+   "name": "testYearlyByHourAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYHOUR=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19980902T060006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 655"
+  },
+  {
+   "id": "rrulejs-0037",
+   "name": "testYearlyByMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 671"
+  },
+  {
+   "id": "rrulejs-0038",
+   "name": "testYearlyByHourAndMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 687"
+  },
+  {
+   "id": "rrulejs-0039",
+   "name": "testYearlyBySetPos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYSETPOS=3,-3;BYMONTHDAY=15;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971115T180000Z",
+    "19980215T060000Z",
+    "19981115T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 704"
+  },
+  {
+   "id": "rrulejs-0040",
+   "name": "testYearlyBetweenInc",
+   "dtstart": "20150101T000000Z",
+   "rrule": [
+    "FREQ=YEARLY"
+   ],
+   "include_dtstart": false,
+   "between": {
+    "start": "20160101T000000Z",
+    "end": "20160101T000000Z",
+    "inclusive": true
+   },
+   "expected": [
+    "20160101T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 721"
+  },
+  {
+   "id": "rrulejs-0041",
+   "name": "testYearlyBetweenIncLargeSpan",
+   "dtstart": "19200101T000000Z",
+   "rrule": [
+    "FREQ=YEARLY"
+   ],
+   "include_dtstart": false,
+   "between": {
+    "start": "20160101T000000Z",
+    "end": "20160101T000000Z",
+    "inclusive": true
+   },
+   "expected": [
+    "20160101T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 734"
+  },
+  {
+   "id": "rrulejs-0042",
+   "name": "testMonthly",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19971002T090000Z",
+    "19971102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 747"
+  },
+  {
+   "id": "rrulejs-0043",
+   "name": "testMonthlyInterval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=2;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19971102T090000Z",
+    "19980102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 761"
+  },
+  {
+   "id": "rrulejs-0044",
+   "name": "testMonthlyIntervalLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=18;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19990302T090000Z",
+    "20000902T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 776"
+  },
+  {
+   "id": "rrulejs-0045",
+   "name": "testMonthlyByMonth",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980102T090000Z",
+    "19980302T090000Z",
+    "19990102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 791"
+  },
+  {
+   "id": "rrulejs-0046",
+   "name": "testMonthlyByMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T090000Z",
+    "19971001T090000Z",
+    "19971003T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 806"
+  },
+  {
+   "id": "rrulejs-0047",
+   "name": "testMonthlyByMonthAndMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T090000Z",
+    "19980107T090000Z",
+    "19980305T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 821"
+  },
+  {
+   "id": "rrulejs-0048",
+   "name": "testMonthlyByWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 837"
+  },
+  {
+   "id": "rrulejs-0049",
+   "name": "testMonthlyByNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970925T090000Z",
+    "19971007T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 852"
+  },
+  {
+   "id": "rrulejs-0050",
+   "name": "testMonthlyByNWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYDAY=3TU,-3TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970911T090000Z",
+    "19970916T090000Z",
+    "19971016T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 867"
+  },
+  {
+   "id": "rrulejs-0051",
+   "name": "testMonthlyByMonthAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980106T090000Z",
+    "19980108T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 882"
+  },
+  {
+   "id": "rrulejs-0052",
+   "name": "testMonthlyByMonthAndNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980106T090000Z",
+    "19980129T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 898"
+  },
+  {
+   "id": "rrulejs-0053",
+   "name": "testMonthlyByMonthAndNWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYDAY=3TU,-3TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980115T090000Z",
+    "19980120T090000Z",
+    "19980312T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 914"
+  },
+  {
+   "id": "rrulejs-0054",
+   "name": "testMonthlyByMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980203T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 930"
+  },
+  {
+   "id": "rrulejs-0055",
+   "name": "testMonthlyByMonthAndMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980303T090000Z",
+    "20010301T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 946"
+  },
+  {
+   "id": "rrulejs-0056",
+   "name": "testMonthlyByYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=4;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19980101T090000Z",
+    "19980410T090000Z",
+    "19980719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-MONTHLY"
+   ],
+   "comment": "source line 963"
+  },
+  {
+   "id": "rrulejs-0057",
+   "name": "testMonthlyByYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=4;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19980101T090000Z",
+    "19980410T090000Z",
+    "19980719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-MONTHLY"
+   ],
+   "comment": "source line 979"
+  },
+  {
+   "id": "rrulejs-0058",
+   "name": "testMonthlyByMonthAndYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T090000Z",
+    "19980719T090000Z",
+    "19990410T090000Z",
+    "19990719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-MONTHLY"
+   ],
+   "comment": "source line 995"
+  },
+  {
+   "id": "rrulejs-0059",
+   "name": "testMonthlyByMonthAndYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T090000Z",
+    "19980719T090000Z",
+    "19990410T090000Z",
+    "19990719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-MONTHLY"
+   ],
+   "comment": "source line 1012"
+  },
+  {
+   "id": "rrulejs-0060",
+   "name": "testMonthlyByWeekNo",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYWEEKNO=20"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980511T090000Z",
+    "19980512T090000Z",
+    "19980513T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-MONTHLY"
+   ],
+   "comment": "source line 1029"
+  },
+  {
+   "id": "rrulejs-0061",
+   "name": "testMonthlyByWeekNoAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYWEEKNO=1;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971229T090000Z",
+    "19990104T090000Z",
+    "20000103T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-MONTHLY"
+   ],
+   "comment": "source line 1044"
+  },
+  {
+   "id": "rrulejs-0062",
+   "name": "testMonthlyByWeekNoAndWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYWEEKNO=52;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T090000Z",
+    "19981227T090000Z",
+    "20000102T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-MONTHLY"
+   ],
+   "comment": "source line 1062"
+  },
+  {
+   "id": "rrulejs-0063",
+   "name": "testMonthlyByWeekNoAndWeekDayLast",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYWEEKNO=-1;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T090000Z",
+    "19990103T090000Z",
+    "20000102T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-MONTHLY"
+   ],
+   "comment": "source line 1080"
+  },
+  {
+   "id": "rrulejs-0064",
+   "name": "testMonthlyByWeekNoAndWeekDay53",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYWEEKNO=53;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19981228T090000Z",
+    "20041227T090000Z",
+    "20091228T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-MONTHLY"
+   ],
+   "comment": "source line 1096"
+  },
+  {
+   "id": "rrulejs-0065",
+   "name": "testMonthlyByEaster",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYEASTER=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980412T090000Z",
+    "19990404T090000Z",
+    "20000423T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 1112"
+  },
+  {
+   "id": "rrulejs-0066",
+   "name": "testMonthlyByEasterPos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYEASTER=1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980413T090000Z",
+    "19990405T090000Z",
+    "20000424T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 1127"
+  },
+  {
+   "id": "rrulejs-0067",
+   "name": "testMonthlyByEasterNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYEASTER=-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980411T090000Z",
+    "19990403T090000Z",
+    "20000422T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 1142"
+  },
+  {
+   "id": "rrulejs-0068",
+   "name": "testMonthlyByHour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19971002T060000Z",
+    "19971002T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1157"
+  },
+  {
+   "id": "rrulejs-0069",
+   "name": "testMonthlyByMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19971002T090600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1172"
+  },
+  {
+   "id": "rrulejs-0070",
+   "name": "testMonthlyBySecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19971002T090006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1187"
+  },
+  {
+   "id": "rrulejs-0071",
+   "name": "testMonthlyByHourAndMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19971002T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1202"
+  },
+  {
+   "id": "rrulejs-0072",
+   "name": "testMonthlyByHourAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYHOUR=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19971002T060006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1218"
+  },
+  {
+   "id": "rrulejs-0073",
+   "name": "testMonthlyByMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1234"
+  },
+  {
+   "id": "rrulejs-0074",
+   "name": "testMonthlyByHourAndMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1250"
+  },
+  {
+   "id": "rrulejs-0075",
+   "name": "testMonthlyBySetPos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYSETPOS=3,-3;BYMONTHDAY=13,17;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970913T180000Z",
+    "19970917T060000Z",
+    "19971013T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1267"
+  },
+  {
+   "id": "rrulejs-0076",
+   "name": "testWeekly",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970909T090000Z",
+    "19970916T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1316"
+  },
+  {
+   "id": "rrulejs-0077",
+   "name": "testWeeklyInterval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970916T090000Z",
+    "19970930T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1330"
+  },
+  {
+   "id": "rrulejs-0078",
+   "name": "testWeeklyIntervalLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=20;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19980120T090000Z",
+    "19980609T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1345"
+  },
+  {
+   "id": "rrulejs-0079",
+   "name": "testWeeklyByMonth",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYMONTH=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980106T090000Z",
+    "19980113T090000Z",
+    "19980120T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1360"
+  },
+  {
+   "id": "rrulejs-0080",
+   "name": "testWeeklyByMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYMONTHDAY=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T090000Z",
+    "19971001T090000Z",
+    "19971003T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYMONTHDAY-WITH-WEEKLY"
+   ],
+   "comment": "source line 1375"
+  },
+  {
+   "id": "rrulejs-0081",
+   "name": "testWeeklyByMonthAndMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T090000Z",
+    "19980107T090000Z",
+    "19980305T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYMONTHDAY-WITH-WEEKLY"
+   ],
+   "comment": "source line 1390"
+  },
+  {
+   "id": "rrulejs-0082",
+   "name": "testWeeklyByWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1406"
+  },
+  {
+   "id": "rrulejs-0083",
+   "name": "testWeeklyByNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-WEEKLY"
+   ],
+   "comment": "source line 1421"
+  },
+  {
+   "id": "rrulejs-0084",
+   "name": "testWeeklyByMonthAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980106T090000Z",
+    "19980108T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1436"
+  },
+  {
+   "id": "rrulejs-0085",
+   "name": "testWeeklyByMonthAndNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYMONTH=1,3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980106T090000Z",
+    "19980108T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-WEEKLY"
+   ],
+   "comment": "source line 1455"
+  },
+  {
+   "id": "rrulejs-0086",
+   "name": "testWeeklyByMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980203T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYMONTHDAY-WITH-WEEKLY"
+   ],
+   "comment": "source line 1471"
+  },
+  {
+   "id": "rrulejs-0087",
+   "name": "testWeeklyByMonthAndMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980303T090000Z",
+    "20010301T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYMONTHDAY-WITH-WEEKLY"
+   ],
+   "comment": "source line 1487"
+  },
+  {
+   "id": "rrulejs-0088",
+   "name": "testWeeklyByYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=4;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19980101T090000Z",
+    "19980410T090000Z",
+    "19980719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-WEEKLY"
+   ],
+   "comment": "source line 1504"
+  },
+  {
+   "id": "rrulejs-0089",
+   "name": "testWeeklyByYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=4;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19980101T090000Z",
+    "19980410T090000Z",
+    "19980719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-WEEKLY"
+   ],
+   "comment": "source line 1520"
+  },
+  {
+   "id": "rrulejs-0090",
+   "name": "testWeeklyByMonthAndYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=4;BYMONTH=1,7;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980719T090000Z",
+    "19990101T090000Z",
+    "19990719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-WEEKLY"
+   ],
+   "comment": "source line 1536"
+  },
+  {
+   "id": "rrulejs-0091",
+   "name": "testWeeklyByMonthAndYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=4;BYMONTH=1,7;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980719T090000Z",
+    "19990101T090000Z",
+    "19990719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-WEEKLY"
+   ],
+   "comment": "source line 1553"
+  },
+  {
+   "id": "rrulejs-0092",
+   "name": "testWeeklyByWeekNo",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYWEEKNO=20"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980511T090000Z",
+    "19980512T090000Z",
+    "19980513T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-WEEKLY"
+   ],
+   "comment": "source line 1570"
+  },
+  {
+   "id": "rrulejs-0093",
+   "name": "testWeeklyByWeekNoAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYWEEKNO=1;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971229T090000Z",
+    "19990104T090000Z",
+    "20000103T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-WEEKLY"
+   ],
+   "comment": "source line 1585"
+  },
+  {
+   "id": "rrulejs-0094",
+   "name": "testWeeklyByWeekNoAndWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYWEEKNO=52;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T090000Z",
+    "19981227T090000Z",
+    "20000102T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-WEEKLY"
+   ],
+   "comment": "source line 1603"
+  },
+  {
+   "id": "rrulejs-0095",
+   "name": "testWeeklyByWeekNoAndWeekDayLast",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYWEEKNO=-1;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T090000Z",
+    "19990103T090000Z",
+    "20000102T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-WEEKLY"
+   ],
+   "comment": "source line 1621"
+  },
+  {
+   "id": "rrulejs-0096",
+   "name": "testWeeklyByWeekNoAndWeekDay53",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYWEEKNO=53;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19981228T090000Z",
+    "20041227T090000Z",
+    "20091228T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-WEEKLY"
+   ],
+   "comment": "source line 1637"
+  },
+  {
+   "id": "rrulejs-0097",
+   "name": "testWeeklyByEaster",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYEASTER=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980412T090000Z",
+    "19990404T090000Z",
+    "20000423T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 1653"
+  },
+  {
+   "id": "rrulejs-0098",
+   "name": "testWeeklyByEasterPos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYEASTER=1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980413T090000Z",
+    "19990405T090000Z",
+    "20000424T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 1668"
+  },
+  {
+   "id": "rrulejs-0099",
+   "name": "testWeeklyByEasterNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYEASTER=-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980411T090000Z",
+    "19990403T090000Z",
+    "20000422T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 1683"
+  },
+  {
+   "id": "rrulejs-0100",
+   "name": "testWeeklyByHour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970909T060000Z",
+    "19970909T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1698"
+  },
+  {
+   "id": "rrulejs-0101",
+   "name": "testWeeklyByMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19970909T090600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1713"
+  },
+  {
+   "id": "rrulejs-0102",
+   "name": "testWeeklyBySecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19970909T090006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1728"
+  },
+  {
+   "id": "rrulejs-0103",
+   "name": "testWeeklyByHourAndMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19970909T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1743"
+  },
+  {
+   "id": "rrulejs-0104",
+   "name": "testWeeklyByHourAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYHOUR=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19970909T060006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1759"
+  },
+  {
+   "id": "rrulejs-0105",
+   "name": "testWeeklyByMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1775"
+  },
+  {
+   "id": "rrulejs-0106",
+   "name": "testWeeklyByHourAndMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1791"
+  },
+  {
+   "id": "rrulejs-0107",
+   "name": "testWeeklyBySetPos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYSETPOS=3,-3;BYDAY=TU,TH;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970904T060000Z",
+    "19970909T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1808"
+  },
+  {
+   "id": "rrulejs-0108",
+   "name": "testDaily",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T090000Z",
+    "19970904T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1825"
+  },
+  {
+   "id": "rrulejs-0109",
+   "name": "testDailyInterval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=2;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970906T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1839"
+  },
+  {
+   "id": "rrulejs-0110",
+   "name": "testDailyIntervalLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=92;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19971203T090000Z",
+    "19980305T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1854"
+  },
+  {
+   "id": "rrulejs-0111",
+   "name": "testDailyByMonth",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTH=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980102T090000Z",
+    "19980103T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1869"
+  },
+  {
+   "id": "rrulejs-0112",
+   "name": "testDailyByMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTHDAY=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T090000Z",
+    "19971001T090000Z",
+    "19971003T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1884"
+  },
+  {
+   "id": "rrulejs-0113",
+   "name": "testDailyByMonthAndMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T090000Z",
+    "19980107T090000Z",
+    "19980305T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1899"
+  },
+  {
+   "id": "rrulejs-0114",
+   "name": "testDailyByWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1915"
+  },
+  {
+   "id": "rrulejs-0115",
+   "name": "testDailyByNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-DAILY"
+   ],
+   "comment": "source line 1930"
+  },
+  {
+   "id": "rrulejs-0116",
+   "name": "testDailyByMonthAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980106T090000Z",
+    "19980108T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1945"
+  },
+  {
+   "id": "rrulejs-0117",
+   "name": "testDailyByMonthAndNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTH=1,3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980106T090000Z",
+    "19980108T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-DAILY"
+   ],
+   "comment": "source line 1961"
+  },
+  {
+   "id": "rrulejs-0118",
+   "name": "testDailyByMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980203T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1977"
+  },
+  {
+   "id": "rrulejs-0119",
+   "name": "testDailyByMonthAndMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980303T090000Z",
+    "20010301T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 1993"
+  },
+  {
+   "id": "rrulejs-0120",
+   "name": "testDailyByYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=4;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19980101T090000Z",
+    "19980410T090000Z",
+    "19980719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-DAILY"
+   ],
+   "comment": "source line 2010"
+  },
+  {
+   "id": "rrulejs-0121",
+   "name": "testDailyByYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=4;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19980101T090000Z",
+    "19980410T090000Z",
+    "19980719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-DAILY"
+   ],
+   "comment": "source line 2026"
+  },
+  {
+   "id": "rrulejs-0122",
+   "name": "testDailyByMonthAndYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=4;BYMONTH=1,7;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980719T090000Z",
+    "19990101T090000Z",
+    "19990719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-DAILY"
+   ],
+   "comment": "source line 2042"
+  },
+  {
+   "id": "rrulejs-0123",
+   "name": "testDailyByMonthAndYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=4;BYMONTH=1,7;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980719T090000Z",
+    "19990101T090000Z",
+    "19990719T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYYEARDAY-WITH-DAILY"
+   ],
+   "comment": "source line 2059"
+  },
+  {
+   "id": "rrulejs-0124",
+   "name": "testDailyByWeekNo",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYWEEKNO=20"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980511T090000Z",
+    "19980512T090000Z",
+    "19980513T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-DAILY"
+   ],
+   "comment": "source line 2076"
+  },
+  {
+   "id": "rrulejs-0125",
+   "name": "testDailyByWeekNoAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYWEEKNO=1;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971229T090000Z",
+    "19990104T090000Z",
+    "20000103T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-DAILY"
+   ],
+   "comment": "source line 2091"
+  },
+  {
+   "id": "rrulejs-0126",
+   "name": "testDailyByWeekNoAndWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYWEEKNO=52;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T090000Z",
+    "19981227T090000Z",
+    "20000102T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-DAILY"
+   ],
+   "comment": "source line 2109"
+  },
+  {
+   "id": "rrulejs-0127",
+   "name": "testDailyByWeekNoAndWeekDayLast",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYWEEKNO=-1;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T090000Z",
+    "19990103T090000Z",
+    "20000102T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-DAILY"
+   ],
+   "comment": "source line 2127"
+  },
+  {
+   "id": "rrulejs-0128",
+   "name": "testDailyByWeekNoAndWeekDay53",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYWEEKNO=53;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19981228T090000Z",
+    "20041227T090000Z",
+    "20091228T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-DAILY"
+   ],
+   "comment": "source line 2143"
+  },
+  {
+   "id": "rrulejs-0129",
+   "name": "testDailyByEaster",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYEASTER=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980412T090000Z",
+    "19990404T090000Z",
+    "20000423T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 2159"
+  },
+  {
+   "id": "rrulejs-0130",
+   "name": "testDailyByEasterPos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYEASTER=1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980413T090000Z",
+    "19990405T090000Z",
+    "20000424T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 2174"
+  },
+  {
+   "id": "rrulejs-0131",
+   "name": "testDailyByEasterNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYEASTER=-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980411T090000Z",
+    "19990403T090000Z",
+    "20000422T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.js parseOptions() forces freq=YEARLY whenever byeaster is set; source line 2189"
+  },
+  {
+   "id": "rrulejs-0132",
+   "name": "testDailyByHour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970903T060000Z",
+    "19970903T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2204"
+  },
+  {
+   "id": "rrulejs-0133",
+   "name": "testDailyByMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19970903T090600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2219"
+  },
+  {
+   "id": "rrulejs-0134",
+   "name": "testDailyBySecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19970903T090006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2234"
+  },
+  {
+   "id": "rrulejs-0135",
+   "name": "testDailyByHourAndMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19970903T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2249"
+  },
+  {
+   "id": "rrulejs-0136",
+   "name": "testDailyByHourAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19970903T060006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2265"
+  },
+  {
+   "id": "rrulejs-0137",
+   "name": "testDailyByMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2281"
+  },
+  {
+   "id": "rrulejs-0138",
+   "name": "testDailyByHourAndMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2297"
+  },
+  {
+   "id": "rrulejs-0139",
+   "name": "testDailyBySetPos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYSETPOS=3,-3;BYHOUR=6,18;BYMINUTE=15,45"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T181500Z",
+    "19970903T064500Z",
+    "19970903T181500Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2314"
+  },
+  {
+   "id": "rrulejs-0140",
+   "name": "testHourly",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T100000Z",
+    "19970902T110000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2331"
+  },
+  {
+   "id": "rrulejs-0141",
+   "name": "testHourlyInterval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=2;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T110000Z",
+    "19970902T130000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2345"
+  },
+  {
+   "id": "rrulejs-0142",
+   "name": "testHourlyIntervalLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=769;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19971004T100000Z",
+    "19971105T110000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2360"
+  },
+  {
+   "id": "rrulejs-0143",
+   "name": "testHourlyByMonth",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTH=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T010000Z",
+    "19980101T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2375"
+  },
+  {
+   "id": "rrulejs-0144",
+   "name": "testHourlyByMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTHDAY=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T000000Z",
+    "19970903T010000Z",
+    "19970903T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2390"
+  },
+  {
+   "id": "rrulejs-0145",
+   "name": "testHourlyByMonthAndMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T000000Z",
+    "19980105T010000Z",
+    "19980105T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2405"
+  },
+  {
+   "id": "rrulejs-0146",
+   "name": "testHourlyByWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T100000Z",
+    "19970902T110000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2421"
+  },
+  {
+   "id": "rrulejs-0147",
+   "name": "testHourlyByNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T100000Z",
+    "19970902T110000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-HOURLY"
+   ],
+   "comment": "source line 2436"
+  },
+  {
+   "id": "rrulejs-0148",
+   "name": "testHourlyByMonthAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T010000Z",
+    "19980101T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2451"
+  },
+  {
+   "id": "rrulejs-0149",
+   "name": "testHourlyByMonthAndNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTH=1,3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T010000Z",
+    "19980101T020000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-HOURLY"
+   ],
+   "comment": "source line 2467"
+  },
+  {
+   "id": "rrulejs-0150",
+   "name": "testHourlyByMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T010000Z",
+    "19980101T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2483"
+  },
+  {
+   "id": "rrulejs-0151",
+   "name": "testHourlyByMonthAndMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T010000Z",
+    "19980101T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2499"
+  },
+  {
+   "id": "rrulejs-0152",
+   "name": "testHourlyByYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=4;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T000000Z",
+    "19971231T010000Z",
+    "19971231T020000Z",
+    "19971231T030000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2516"
+  },
+  {
+   "id": "rrulejs-0153",
+   "name": "testHourlyByYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=4;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T000000Z",
+    "19971231T010000Z",
+    "19971231T020000Z",
+    "19971231T030000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2532"
+  },
+  {
+   "id": "rrulejs-0154",
+   "name": "testHourlyByMonthAndYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T000000Z",
+    "19980410T010000Z",
+    "19980410T020000Z",
+    "19980410T030000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2548"
+  },
+  {
+   "id": "rrulejs-0155",
+   "name": "testHourlyByMonthAndYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T000000Z",
+    "19980410T010000Z",
+    "19980410T020000Z",
+    "19980410T030000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2565"
+  },
+  {
+   "id": "rrulejs-0156",
+   "name": "testHourlyByWeekNo",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYWEEKNO=20"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980511T000000Z",
+    "19980511T010000Z",
+    "19980511T020000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-HOURLY"
+   ],
+   "comment": "source line 2582"
+  },
+  {
+   "id": "rrulejs-0157",
+   "name": "testHourlyByWeekNoAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYWEEKNO=1;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971229T000000Z",
+    "19971229T010000Z",
+    "19971229T020000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-HOURLY"
+   ],
+   "comment": "source line 2597"
+  },
+  {
+   "id": "rrulejs-0158",
+   "name": "testHourlyByWeekNoAndWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYWEEKNO=52;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T000000Z",
+    "19971228T010000Z",
+    "19971228T020000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-HOURLY"
+   ],
+   "comment": "source line 2613"
+  },
+  {
+   "id": "rrulejs-0159",
+   "name": "testHourlyByWeekNoAndWeekDayLast",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYWEEKNO=-1;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T000000Z",
+    "19971228T010000Z",
+    "19971228T020000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-HOURLY"
+   ],
+   "comment": "source line 2629"
+  },
+  {
+   "id": "rrulejs-0160",
+   "name": "testHourlyByWeekNoAndWeekDay53",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYWEEKNO=53;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19981228T000000Z",
+    "19981228T010000Z",
+    "19981228T020000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-HOURLY"
+   ],
+   "comment": "source line 2645"
+  },
+  {
+   "id": "rrulejs-0161",
+   "name": "testHourlyByHour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970903T060000Z",
+    "19970903T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2706"
+  },
+  {
+   "id": "rrulejs-0162",
+   "name": "testHourlyByMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19970902T100600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2721"
+  },
+  {
+   "id": "rrulejs-0163",
+   "name": "testHourlyBySecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19970902T100006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2736"
+  },
+  {
+   "id": "rrulejs-0164",
+   "name": "testHourlyByHourAndMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19970903T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2751"
+  },
+  {
+   "id": "rrulejs-0165",
+   "name": "testHourlyByHourAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYHOUR=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19970903T060006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2767"
+  },
+  {
+   "id": "rrulejs-0166",
+   "name": "testHourlyByMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2783"
+  },
+  {
+   "id": "rrulejs-0167",
+   "name": "testHourlyByHourAndMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2799"
+  },
+  {
+   "id": "rrulejs-0168",
+   "name": "testHourlyBySetPos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYSETPOS=3,-3;BYMINUTE=15,45;BYSECOND=15,45"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T091545Z",
+    "19970902T094515Z",
+    "19970902T101545Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2816"
+  },
+  {
+   "id": "rrulejs-0169",
+   "name": "testMinutely",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090100Z",
+    "19970902T090200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2833"
+  },
+  {
+   "id": "rrulejs-0170",
+   "name": "testMinutelyInterval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;INTERVAL=2;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090200Z",
+    "19970902T090400Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2847"
+  },
+  {
+   "id": "rrulejs-0171",
+   "name": "testMinutelyIntervalLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;INTERVAL=1501;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T100100Z",
+    "19970904T110200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2862"
+  },
+  {
+   "id": "rrulejs-0172",
+   "name": "testMinutelyByMonth",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTH=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000100Z",
+    "19980101T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2877"
+  },
+  {
+   "id": "rrulejs-0173",
+   "name": "testMinutelyByMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTHDAY=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T000000Z",
+    "19970903T000100Z",
+    "19970903T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2892"
+  },
+  {
+   "id": "rrulejs-0174",
+   "name": "testMinutelyByMonthAndMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T000000Z",
+    "19980105T000100Z",
+    "19980105T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2907"
+  },
+  {
+   "id": "rrulejs-0175",
+   "name": "testMinutelyByWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090100Z",
+    "19970902T090200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2923"
+  },
+  {
+   "id": "rrulejs-0176",
+   "name": "testMinutelyByNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090100Z",
+    "19970902T090200Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-MINUTELY"
+   ],
+   "comment": "source line 2938"
+  },
+  {
+   "id": "rrulejs-0177",
+   "name": "testMinutelyByMonthAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000100Z",
+    "19980101T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2953"
+  },
+  {
+   "id": "rrulejs-0178",
+   "name": "testMinutelyByMonthAndNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTH=1,3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000100Z",
+    "19980101T000200Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-MINUTELY"
+   ],
+   "comment": "source line 2969"
+  },
+  {
+   "id": "rrulejs-0179",
+   "name": "testMinutelyByMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000100Z",
+    "19980101T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 2985"
+  },
+  {
+   "id": "rrulejs-0180",
+   "name": "testMinutelyByMonthAndMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000100Z",
+    "19980101T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3001"
+  },
+  {
+   "id": "rrulejs-0181",
+   "name": "testMinutelyByYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=4;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T000000Z",
+    "19971231T000100Z",
+    "19971231T000200Z",
+    "19971231T000300Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3018"
+  },
+  {
+   "id": "rrulejs-0182",
+   "name": "testMinutelyByYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=4;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T000000Z",
+    "19971231T000100Z",
+    "19971231T000200Z",
+    "19971231T000300Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3034"
+  },
+  {
+   "id": "rrulejs-0183",
+   "name": "testMinutelyByMonthAndYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=4;BYMONTH=4,7;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T000000Z",
+    "19980410T000100Z",
+    "19980410T000200Z",
+    "19980410T000300Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3050"
+  },
+  {
+   "id": "rrulejs-0184",
+   "name": "testMinutelyByMonthAndYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=4;BYMONTH=4,7;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T000000Z",
+    "19980410T000100Z",
+    "19980410T000200Z",
+    "19980410T000300Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3067"
+  },
+  {
+   "id": "rrulejs-0185",
+   "name": "testMinutelyByWeekNo",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYWEEKNO=20"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980511T000000Z",
+    "19980511T000100Z",
+    "19980511T000200Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-MINUTELY"
+   ],
+   "comment": "source line 3084"
+  },
+  {
+   "id": "rrulejs-0186",
+   "name": "testMinutelyByWeekNoAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYWEEKNO=1;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971229T000000Z",
+    "19971229T000100Z",
+    "19971229T000200Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-MINUTELY"
+   ],
+   "comment": "source line 3099"
+  },
+  {
+   "id": "rrulejs-0187",
+   "name": "testMinutelyByWeekNoAndWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYWEEKNO=52;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T000000Z",
+    "19971228T000100Z",
+    "19971228T000200Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-MINUTELY"
+   ],
+   "comment": "source line 3115"
+  },
+  {
+   "id": "rrulejs-0188",
+   "name": "testMinutelyByWeekNoAndWeekDayLast",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYWEEKNO=-1;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T000000Z",
+    "19971228T000100Z",
+    "19971228T000200Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-MINUTELY"
+   ],
+   "comment": "source line 3131"
+  },
+  {
+   "id": "rrulejs-0189",
+   "name": "testMinutelyByWeekNoAndWeekDay53",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYWEEKNO=53;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19981228T000000Z",
+    "19981228T000100Z",
+    "19981228T000200Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-MINUTELY"
+   ],
+   "comment": "source line 3147"
+  },
+  {
+   "id": "rrulejs-0190",
+   "name": "testMinutelyByHour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970902T180100Z",
+    "19970902T180200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3208"
+  },
+  {
+   "id": "rrulejs-0191",
+   "name": "testMinutelyByMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19970902T100600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3223"
+  },
+  {
+   "id": "rrulejs-0192",
+   "name": "testMinutelyBySecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19970902T090106Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3238"
+  },
+  {
+   "id": "rrulejs-0193",
+   "name": "testMinutelyByHourAndMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19970903T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3253"
+  },
+  {
+   "id": "rrulejs-0194",
+   "name": "testMinutelyByHourAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYHOUR=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19970902T180106Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3269"
+  },
+  {
+   "id": "rrulejs-0195",
+   "name": "testMinutelyByMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3285"
+  },
+  {
+   "id": "rrulejs-0196",
+   "name": "testMinutelyByHourAndMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3301"
+  },
+  {
+   "id": "rrulejs-0197",
+   "name": "testMinutelyBySetPos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYSETPOS=3,-3;BYSECOND=15,30,45"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090015Z",
+    "19970902T090045Z",
+    "19970902T090115Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3318"
+  },
+  {
+   "id": "rrulejs-0198",
+   "name": "testSecondly",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090001Z",
+    "19970902T090002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3334"
+  },
+  {
+   "id": "rrulejs-0199",
+   "name": "testSecondlyInterval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;INTERVAL=2;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090002Z",
+    "19970902T090004Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3348"
+  },
+  {
+   "id": "rrulejs-0200",
+   "name": "testSecondlyIntervalLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;INTERVAL=90061;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T100101Z",
+    "19970904T110202Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3363"
+  },
+  {
+   "id": "rrulejs-0201",
+   "name": "testSecondlyByMonth",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTH=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000001Z",
+    "19980101T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3378"
+  },
+  {
+   "id": "rrulejs-0202",
+   "name": "testSecondlyByMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTHDAY=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T000000Z",
+    "19970903T000001Z",
+    "19970903T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3393"
+  },
+  {
+   "id": "rrulejs-0203",
+   "name": "testSecondlyByMonthAndMonthDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T000000Z",
+    "19980105T000001Z",
+    "19980105T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3408"
+  },
+  {
+   "id": "rrulejs-0204",
+   "name": "testSecondlyByWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090001Z",
+    "19970902T090002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3424"
+  },
+  {
+   "id": "rrulejs-0205",
+   "name": "testSecondlyByNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090001Z",
+    "19970902T090002Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-SECONDLY"
+   ],
+   "comment": "source line 3439"
+  },
+  {
+   "id": "rrulejs-0206",
+   "name": "testSecondlyByMonthAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000001Z",
+    "19980101T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3454"
+  },
+  {
+   "id": "rrulejs-0207",
+   "name": "testSecondlyByMonthAndNWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTH=1,3;BYDAY=1TU,-1TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000001Z",
+    "19980101T000002Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYDAY-ORDINAL-WITH-SECONDLY"
+   ],
+   "comment": "source line 3470"
+  },
+  {
+   "id": "rrulejs-0208",
+   "name": "testSecondlyByMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000001Z",
+    "19980101T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3486"
+  },
+  {
+   "id": "rrulejs-0209",
+   "name": "testSecondlyByMonthAndMonthDayAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000001Z",
+    "19980101T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3502"
+  },
+  {
+   "id": "rrulejs-0210",
+   "name": "testSecondlyByYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=4;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T000000Z",
+    "19971231T000001Z",
+    "19971231T000002Z",
+    "19971231T000003Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3519"
+  },
+  {
+   "id": "rrulejs-0211",
+   "name": "testSecondlyByYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=4;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T000000Z",
+    "19971231T000001Z",
+    "19971231T000002Z",
+    "19971231T000003Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3535"
+  },
+  {
+   "id": "rrulejs-0212",
+   "name": "testSecondlyByMonthAndYearDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T000000Z",
+    "19980410T000001Z",
+    "19980410T000002Z",
+    "19980410T000003Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3551"
+  },
+  {
+   "id": "rrulejs-0213",
+   "name": "testSecondlyByMonthAndYearDayNeg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T000000Z",
+    "19980410T000001Z",
+    "19980410T000002Z",
+    "19980410T000003Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3568"
+  },
+  {
+   "id": "rrulejs-0214",
+   "name": "testSecondlyByWeekNo",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYWEEKNO=20"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980511T000000Z",
+    "19980511T000001Z",
+    "19980511T000002Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-SECONDLY"
+   ],
+   "comment": "source line 3585"
+  },
+  {
+   "id": "rrulejs-0215",
+   "name": "testSecondlyByWeekNoAndWeekDay",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYWEEKNO=1;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971229T000000Z",
+    "19971229T000001Z",
+    "19971229T000002Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-SECONDLY"
+   ],
+   "comment": "source line 3600"
+  },
+  {
+   "id": "rrulejs-0216",
+   "name": "testSecondlyByWeekNoAndWeekDayLarge",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYWEEKNO=52;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T000000Z",
+    "19971228T000001Z",
+    "19971228T000002Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-SECONDLY"
+   ],
+   "comment": "source line 3616"
+  },
+  {
+   "id": "rrulejs-0217",
+   "name": "testSecondlyByWeekNoAndWeekDayLast",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYWEEKNO=-1;BYDAY=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T000000Z",
+    "19971228T000001Z",
+    "19971228T000002Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-SECONDLY"
+   ],
+   "comment": "source line 3632"
+  },
+  {
+   "id": "rrulejs-0218",
+   "name": "testSecondlyByWeekNoAndWeekDay53",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYWEEKNO=53;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19981228T000000Z",
+    "19981228T000001Z",
+    "19981228T000002Z"
+   ],
+   "error": false,
+   "extensions": [
+    "NONSTANDARD:BYWEEKNO-WITH-SECONDLY"
+   ],
+   "comment": "source line 3648"
+  },
+  {
+   "id": "rrulejs-0219",
+   "name": "testSecondlyByHour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970902T180001Z",
+    "19970902T180002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3709"
+  },
+  {
+   "id": "rrulejs-0220",
+   "name": "testSecondlyByMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T090601Z",
+    "19970902T090602Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3724"
+  },
+  {
+   "id": "rrulejs-0221",
+   "name": "testSecondlyBySecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19970902T090106Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3739"
+  },
+  {
+   "id": "rrulejs-0222",
+   "name": "testSecondlyByHourAndMinute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T180601Z",
+    "19970902T180602Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3754"
+  },
+  {
+   "id": "rrulejs-0223",
+   "name": "testSecondlyByHourAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYHOUR=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19970902T180106Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3770"
+  },
+  {
+   "id": "rrulejs-0224",
+   "name": "testSecondlyByMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3786"
+  },
+  {
+   "id": "rrulejs-0225",
+   "name": "testSecondlyByHourAndMinuteAndSecond",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3802"
+  },
+  {
+   "id": "rrulejs-0226",
+   "name": "testUntilNotMatching",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;UNTIL=19970905T080000Z"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T090000Z",
+    "19970904T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3819"
+  },
+  {
+   "id": "rrulejs-0227",
+   "name": "testUntilMatching",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;UNTIL=19970904T090000Z"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T090000Z",
+    "19970904T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3834"
+  },
+  {
+   "id": "rrulejs-0228",
+   "name": "testUntilSingle",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;UNTIL=19970902T090000Z"
+   ],
+   "include_dtstart": false,
+   "limit": 1,
+   "expected": [
+    "19970902T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3849; single expected date: upstream only compares the first instance"
+  },
+  {
+   "id": "rrulejs-0229",
+   "name": "testUntilWithDate",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;UNTIL=19970905T000000Z"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T090000Z",
+    "19970904T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3871"
+  },
+  {
+   "id": "rrulejs-0230",
+   "name": "testWkStIntervalMO",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;COUNT=3;WKST=MO;BYDAY=TU,SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970907T090000Z",
+    "19970916T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3886"
+  },
+  {
+   "id": "rrulejs-0231",
+   "name": "testWkStIntervalSU",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;COUNT=3;WKST=SU;BYDAY=TU,SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970914T090000Z",
+    "19970916T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3903"
+  },
+  {
+   "id": "rrulejs-0232",
+   "name": "testDTStartIsDate",
+   "dtstart": "19970902T000000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T000000Z",
+    "19970903T000000Z",
+    "19970904T000000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "source line 3920"
+  }
+ ]
+}
