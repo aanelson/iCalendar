@@ -475,6 +475,65 @@ func TestConformanceValueSetDateTimeNonDefaultType(t *testing.T) {
 		t.Errorf("SetDateTime on a relative TRIGGER wrote %q with VALUE=%q TZID=%q; want VALUE=DATE-TIME:19980403T120000Z",
 			p.Value, p.Params.Get("VALUE"), p.Params.Get("TZID"))
 	}
+	// §3.8.6.3: "The "RELATED" property parameter is not valid if the value
+	// type of the property is set to DATE-TIME".
+	p = ical.NewProperty("TRIGGER", "-PT15M")
+	p.Params.Set("RELATED", "END")
+	p.SetDateTime(ical.NewDateTime(time.Date(1998, 4, 3, 12, 0, 0, 0, time.UTC)))
+	if p.Params.Get("RELATED") != "" {
+		t.Errorf("SetDateTime on TRIGGER;RELATED=END kept RELATED: %v", p.Params)
+	}
+}
+
+// §3.2.20: "If the property's default value type is overridden by some
+// other allowable value type, then this parameter MUST be specified." A
+// setter writes VALUE only when the property's default differs: DATE-TIME
+// for DTSTART, DURATION for DURATION and TRIGGER, TEXT for an X- property
+// (§3.8.8.2), and none for RFC 7986's REFRESH-INTERVAL, which requires
+// VALUE=DURATION.
+func TestConformanceValueSetterValueParam(t *testing.T) {
+	at := ical.NewDateTime(time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC))
+	for _, c := range []struct {
+		name, value string // value: the VALUE parameter before
+		dur         bool
+		want        string
+	}{
+		{"DTSTART", "DATE-TIME", false, ""},
+		{"X-WHEN", "", false, "DATE-TIME"},
+		{"DURATION", "", true, ""},
+		{"TRIGGER", "DATE-TIME", true, ""},
+		{"REFRESH-INTERVAL", "", true, "DURATION"},
+		{"X-LENGTH", "", true, "DURATION"},
+	} {
+		p := ical.NewProperty(c.name, "")
+		if c.value != "" {
+			p.Params.Set("VALUE", c.value)
+		}
+		if c.dur {
+			p.SetDuration(ical.Duration{Weeks: 1})
+		} else {
+			p.SetDateTime(at)
+		}
+		if got := p.Params.Get("VALUE"); got != c.want {
+			t.Errorf("%s: VALUE=%q, want %q", c.name, got, c.want)
+		}
+	}
+}
+
+// A list that starts with a floating value and holds a zoned one takes the
+// zoned one's form, so its instant survives; the floating value keeps its
+// wall clock.
+func TestConformanceValueSetDateTimesFloatingFirst(t *testing.T) {
+	ny, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Skip(err)
+	}
+	p := ical.NewProperty("RDATE", "")
+	p.SetDateTimes(ical.NewFloating(civil.DateTime{Date: civil.Date{Year: 2024, Month: 1, Day: 1}, Time: civil.Time{Hour: 9}}),
+		ical.NewDateTime(time.Date(2024, 1, 2, 9, 0, 0, 0, ny)))
+	if p.Params.Get("TZID") != "America/New_York" || p.Value != "20240101T090000,20240102T090000" {
+		t.Errorf("wrote %v:%s; want TZID=America/New_York:20240101T090000,20240102T090000", p.Params, p.Value)
+	}
 }
 
 // A DATE-TIME's TZID form names the first of two repeated wall-clock times

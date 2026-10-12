@@ -184,13 +184,26 @@ func NewDateTime(t time.Time) DateTime {
 	if loc != time.UTC && loc != time.Local && loc.String() != "" {
 		if _, err := tz.Load(loc.String()); err == nil {
 			v := DateTime{DateTime: civil.DateTimeOf(t), TZID: loc.String(), Loc: loc}
-			if !v.DateTime.In(loc).Equal(t) {
-				v = v.withInstant(t) // the second of two repeated readings
+			if secondReading(t) {
+				v = v.withInstant(t)
 			}
 			return v
 		}
 	}
 	return DateTime{DateTime: civil.DateTimeOf(t.UTC()), UTC: true}
+}
+
+// secondReading reports whether t's wall clock read the same a moment
+// earlier, in the overlap after clocks go back. A TZID's wall clock names
+// the first reading (RFC 5545 §3.3.5), so such a t needs its instant kept.
+func secondReading(t time.Time) bool {
+	start, _ := t.ZoneBounds()
+	if start.IsZero() {
+		return false
+	}
+	_, off := t.Zone()
+	_, before := start.Add(-time.Second).Zone()
+	return before > off && t.Before(start.Add(time.Duration(before-off)*time.Second))
 }
 
 // Floating reports whether v is in no zone: a DATE or a floating
@@ -200,6 +213,10 @@ func (v DateTime) Floating() bool { return !v.UTC && v.TZID == "" }
 // unresolved reports whether v names a zone that couldn't be resolved, so
 // it has no instant: Time's UTC reading of it is only a fallback.
 func (v DateTime) unresolved() bool { return v.TZID != "" && v.Loc == nil }
+
+// unusable reports whether a value read with err has no instant to use: it
+// is missing, or its TZID couldn't be resolved.
+func unusable(v DateTime, err error) bool { return err != nil && (v.IsZero() || v.unresolved()) }
 
 // Location returns the zone v is in: time.UTC, the resolved TZID, or nil
 // for a floating value (or a TZID that couldn't be resolved).
@@ -339,6 +356,9 @@ func resolve(r tz.Resolver, tzid string) (*time.Location, error) {
 func (p *Property) DateTimes(r tz.Resolver) ([]DateTime, error) {
 	if strings.EqualFold(p.Params.Get("VALUE"), "PERIOD") {
 		ps, err := p.Periods(r)
+		if errors.Is(err, errBackwards) {
+			err = nil // a period's end doesn't change its start
+		}
 		out := make([]DateTime, len(ps))
 		for i, per := range ps {
 			out[i] = per.Start
@@ -374,36 +394,46 @@ func (p *Property) SetDateTime(v DateTime) {
 
 // SetDateTimes sets the value to a comma-separated list of DATE or
 // DATE-TIME values. They are written in the form of the first; later
-// values in other zones are converted to it. A TZID's wall clock names the
-// first of two repeated readings (RFC 5545 §3.3.5), so a list holding the
-// second, when clocks go back, is written in UTC instead.
+// values in other zones are converted to it. A floating value has no
+// instant to lose, so a list that starts with one takes the form of its
+// first zoned value instead. A TZID's wall clock names the first of two
+// repeated readings (RFC 5545 §3.3.5), so a list holding the second, when
+// clocks go back, is written in UTC.
 func (p *Property) SetDateTimes(vs ...DateTime) {
 	if len(vs) == 0 {
 		p.Value = ""
 		return
 	}
 	first := vs[0]
+	if first.Floating() && !first.IsDate {
+		for _, v := range vs[1:] {
+			if !v.IsDate && !v.Floating() {
+				first = convertForm(first, v)
+				break
+			}
+		}
+	}
 	if first.TZID != "" && !first.UTC && !first.IsDate && first.Loc != nil {
 		for _, v := range vs {
-			if !v.IsDate && v.Location() != nil && !civil.DateTimeOf(v.In(first.Loc)).In(first.Loc).Equal(v.Time()) {
+			if !v.IsDate && v.Location() != nil && secondReading(v.In(first.Loc)) {
 				first = NewDateTime(first.Time().UTC())
 				break
 			}
 		}
 	}
 	p.Params.Del("TZID")
-	switch {
-	case first.IsDate:
-		p.Params.Set("VALUE", "DATE")
-	case strings.EqualFold(p.Name, "TRIGGER"):
-		// TRIGGER defaults to DURATION, and an absolute one is in UTC
-		// (§3.8.6.3).
-		p.Params.Set("VALUE", "DATE-TIME")
-		if first.Location() != nil {
-			first = NewDateTime(first.Time().UTC())
+	if first.IsDate {
+		p.setValueType("DATE")
+	} else {
+		p.setValueType("DATE-TIME")
+		if strings.EqualFold(p.Name, "TRIGGER") {
+			// An absolute trigger is in UTC, and RELATED is for a relative
+			// one (§3.8.6.3).
+			p.Params.Del("RELATED")
+			if first.Location() != nil {
+				first = NewDateTime(first.Time().UTC())
+			}
 		}
-	case !strings.EqualFold(p.Params.Get("VALUE"), "DATE-TIME"):
-		p.Params.Del("VALUE")
 	}
 	if first.TZID != "" && !first.UTC && !first.IsDate {
 		p.Params.Set("TZID", first.TZID)
@@ -433,11 +463,41 @@ func convertForm(v, like DateTime) DateTime {
 	case like.UTC:
 		return NewDateTime(v.Time().UTC())
 	case like.Loc != nil:
-		out := like
-		out.DateTime = civil.DateTimeOf(v.In(like.Loc))
+		t := v.In(like.Loc)
+		out := DateTime{DateTime: civil.DateTimeOf(t), TZID: like.TZID, Loc: like.Loc}
+		if secondReading(t) {
+			out = out.withInstant(t)
+		}
 		return out
 	}
 	return v
+}
+
+// defaultTypes are the default value types of the properties the DATE,
+// DATE-TIME and DURATION setters are used on (RFC 5545 §3.8, RFC 7986,
+// RFC 9074). Any other property's is TEXT (§3.8.8). REFRESH-INTERVAL has
+// none: its VALUE=DURATION is required.
+var defaultTypes = map[string]string{
+	"DTSTART": "DATE-TIME", "DTEND": "DATE-TIME", "DUE": "DATE-TIME",
+	"RECURRENCE-ID": "DATE-TIME", "RDATE": "DATE-TIME", "EXDATE": "DATE-TIME",
+	"DTSTAMP": "DATE-TIME", "CREATED": "DATE-TIME", "LAST-MODIFIED": "DATE-TIME",
+	"COMPLETED": "DATE-TIME", "ACKNOWLEDGED": "DATE-TIME",
+	"DURATION": "DURATION", "TRIGGER": "DURATION",
+	"REFRESH-INTERVAL": "",
+}
+
+// setValueType sets the VALUE parameter a value of type t needs: none when
+// t is the property's default type, t otherwise (§3.2.20).
+func (p *Property) setValueType(t string) {
+	def, ok := defaultTypes[strings.ToUpper(p.Name)]
+	if !ok {
+		def = "TEXT"
+	}
+	if t == def {
+		p.Params.Del("VALUE")
+	} else {
+		p.Params.Set("VALUE", t)
+	}
 }
 
 // DURATION (RFC 5545 §3.3.6)
@@ -592,12 +652,10 @@ func (p *Property) Duration() (Duration, error) {
 	return d, nil
 }
 
-// SetDuration sets the value to d, dropping a VALUE parameter that names
-// another type (an absolute TRIGGER's VALUE=DATE-TIME).
+// SetDuration sets the value to d, with the VALUE parameter its property
+// needs for a DURATION.
 func (p *Property) SetDuration(d Duration) {
-	if !strings.EqualFold(p.Params.Get("VALUE"), "DURATION") {
-		p.Params.Del("VALUE")
-	}
+	p.setValueType("DURATION")
 	p.Value = d.String()
 }
 
@@ -618,6 +676,13 @@ func (p Period) EndTime() DateTime {
 	}
 	return p.Start.Add(p.Duration)
 }
+
+// valid reports whether p ends after it starts, as RFC 5545 §3.3.9 requires.
+func (p Period) valid() bool { return p.EndTime().Time().After(p.Start.Time()) }
+
+// errBackwards is wrapped by the error Periods returns for a period that
+// isn't valid.
+var errBackwards = errors.New("doesn't end after it starts")
 
 // Periods returns the value read as a comma-separated list of PERIOD
 // values, as for FREEBUSY and RDATE;VALUE=PERIOD. A period that doesn't
@@ -647,8 +712,8 @@ func (p *Property) Periods(r tz.Resolver) ([]Period, error) {
 			return out, err
 		}
 		// "The start MUST be before the end", or the duration positive.
-		if backwards == nil && !per.EndTime().Time().After(per.Start.Time()) {
-			backwards = p.valueError(fmt.Errorf("period %q doesn't end after it starts", item))
+		if backwards == nil && !per.valid() {
+			backwards = p.valueError(fmt.Errorf("period %q %w", item, errBackwards))
 		}
 		out = append(out, per)
 	}

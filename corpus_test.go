@@ -150,6 +150,8 @@ func TestCorpus(t *testing.T) {
 
 func category(err error) string {
 	switch {
+	case strings.Contains(err.Error(), "no VCALENDAR"):
+		return "no VCALENDAR"
 	case errors.Is(err, io.ErrUnexpectedEOF):
 		return "truncated"
 	case errors.Is(err, contentline.ErrLineTooLong):
@@ -158,8 +160,6 @@ func category(err error) string {
 		return "too deep"
 	case strings.Contains(err.Error(), "not a component name"):
 		return "bad BEGIN"
-	case strings.Contains(err.Error(), "no VCALENDAR"):
-		return "no VCALENDAR"
 	}
 	return "other"
 }

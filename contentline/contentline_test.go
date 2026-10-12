@@ -289,6 +289,32 @@ func TestHostileInputsAreLinear(t *testing.T) {
 	}
 }
 
+// A strict Reader's errors each consume their line, so a caller that reads
+// on gets the lines after it, and then io.EOF. An empty line's error wraps
+// ErrEmptyLine.
+func TestStrictErrorsMoveOn(t *testing.T) {
+	r := NewReader(strings.NewReader("A:1\nB:2\r\n\r\nC:3"))
+	r.Strict = true
+	var got []string
+	for range 10 {
+		l, err := r.ReadLine()
+		if err == io.EOF {
+			break
+		}
+		switch {
+		case errors.Is(err, ErrEmptyLine):
+			got = append(got, "empty")
+		case err != nil:
+			got = append(got, "error")
+		default:
+			got = append(got, l.Name)
+		}
+	}
+	if want := []string{"error", "B", "empty", "error"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
 // indexControl, which skips eight bytes at a time, finds what a byte loop
 // finds: every byte value at every position, on its own, after an HTAB, and
 // beside high bytes.

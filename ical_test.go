@@ -180,7 +180,7 @@ func TestDecodeNoCalendar(t *testing.T) {
 		{"HTML page", "<!DOCTYPE html>\r\n<html><body>Not Found</body></html>\r\n", 0, false},
 		{"vCard", "BEGIN:VCARD\r\nVERSION:4.0\r\nFN:A\r\nEND:VCARD\r\n", 0, false},
 		{"bare VEVENT", "BEGIN:VEVENT\r\nUID:1\r\nEND:VEVENT\r\n", 0, false},
-		{"blank lines", "\r\n\r\n", 0, false},
+		{"blank lines", "\r\n\r\n", 0, true},
 		{"calendar then junk", cal + "<html>\r\nX:1\r\n", 1, true},
 		{"junk then calendar", "<html>\r\n" + cal, 1, true},
 	} {
@@ -197,7 +197,9 @@ func TestDecodeNoCalendar(t *testing.T) {
 				}
 			}
 			var se *SyntaxError
-			if n != tc.cals || tc.eof && err != io.EOF || !tc.eof && !errors.As(err, &se) {
+			// Like Parse on empty input, no calendar at all wraps
+			// io.ErrUnexpectedEOF.
+			if n != tc.cals || tc.eof && err != io.EOF || !tc.eof && (!errors.As(err, &se) || !errors.Is(err, io.ErrUnexpectedEOF)) {
 				t.Errorf("%s (Warn set: %v): %d calendars, then %v", tc.name, warn, n, err)
 			}
 		}

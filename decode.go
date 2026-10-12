@@ -88,14 +88,16 @@ func Parse(r io.Reader) (*Calendar, error) {
 }
 
 // Decode reads the next VCALENDAR. It returns io.EOF, unwrapped, when the
-// input holds no further calendar: at once for empty input, but input that
-// held content and no calendar at all is a *SyntaxError.
+// input holds no further calendar: at once for empty or blank input, but
+// input that held content and no calendar at all is a *SyntaxError wrapping
+// io.ErrUnexpectedEOF, as Parse reports empty input.
 func (d *Decoder) Decode() (*Calendar, error) {
 	if d.r == nil {
 		d.r = contentline.NewReader(d.src)
 		d.r.Strict = d.Strict
 		d.r.Warn = func(err error) {
-			d.skipped = d.skipped || !d.found
+			// A blank line is no more content than empty input is.
+			d.skipped = d.skipped || !d.found && !errors.Is(err, contentline.ErrEmptyLine)
 			if d.Warn != nil {
 				d.Warn(d.wrap(err))
 			}
@@ -113,7 +115,7 @@ func (d *Decoder) Decode() (*Calendar, error) {
 		l, err := d.r.ReadLine()
 		if err == io.EOF {
 			if d.skipped && !d.found {
-				return nil, &SyntaxError{Line: 1, Msg: "no VCALENDAR in the input"}
+				return nil, &SyntaxError{Line: 1, Msg: "no VCALENDAR in the input", Err: io.ErrUnexpectedEOF}
 			}
 			return nil, io.EOF
 		}

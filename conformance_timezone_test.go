@@ -468,6 +468,32 @@ func TestConformanceVTimezoneRequiredParts(t *testing.T) {
 	}
 }
 
+// An observance's RDATE gives onsets, which are the periods' starts, so a
+// period whose end is wrong (§3.3.9) doesn't stop the zone compiling.
+func TestConformanceVTimezoneRDatePeriodEnd(t *testing.T) {
+	cal := ccCal(t, `BEGIN:VTIMEZONE
+TZID:Periods
+BEGIN:STANDARD
+DTSTART:19700101T000000
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0100
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:19970406T020000
+RDATE;VALUE=PERIOD:19970406T020000/PT0S
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+END:DAYLIGHT
+END:VTIMEZONE`)
+	for z := range cal.Timezones() {
+		loc, err := z.Location()
+		if err != nil {
+			t.Fatalf("Location() = %v", err)
+		}
+		ccCheckZone(t, loc, ccUTC("1997-04-06T01:00:00Z"), 7200, "")
+	}
+}
+
 // §3.2.19: the TZID parameter "uniquely identifies the VTIMEZONE calendar
 // component to be used when evaluating the time portion of the property".
 // The calendar's own VTIMEZONE is used even when its TZID is also an IANA

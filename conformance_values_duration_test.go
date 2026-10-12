@@ -653,6 +653,11 @@ func TestConformanceValuePeriod(t *testing.T) {
 		if err == nil || len(ps) != 1 {
 			t.Errorf("Periods(%q) = %+v, %v; want the period and an error", in, ps, err)
 		}
+		// The start is still right, so DateTimes, which reads only the
+		// starts, has nothing to report.
+		if ds, err := cvLine(t, "RDATE;VALUE=PERIOD:"+in).DateTimes(nil); err != nil || len(ds) != 1 {
+			t.Errorf("DateTimes(RDATE;VALUE=PERIOD:%s) = %v, %v; want its start", in, ds, err)
+		}
 	}
 	// A reader with no strict mode may still return what was written; that
 	// is reported.

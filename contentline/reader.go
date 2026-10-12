@@ -17,6 +17,10 @@ const DefaultMaxLineLength = 1 << 20
 // input can't be trusted to line up.
 var ErrLineTooLong = errors.New("contentline: line too long")
 
+// ErrEmptyLine is wrapped by the error or warning a Reader gives for a line
+// that holds nothing but white space.
+var ErrEmptyLine = errors.New("contentline: empty line")
+
 // A Reader reads content lines from an input, unfolding them.
 //
 // It accepts CRLF, LF and lone CR line endings (only CRLF in Strict mode),
@@ -63,9 +67,11 @@ func (r *Reader) ReadLine() (Line, error) {
 			return Line{}, err
 		}
 		if len(bytes.TrimSpace(raw)) == 0 {
-			if err := r.deviate(pos, "empty line"); err != nil {
+			err := &SyntaxError{Line: pos, Msg: "empty line", Err: ErrEmptyLine}
+			if r.Strict {
 				return Line{}, err
 			}
+			r.warn(err)
 			continue
 		}
 		l, err := r.parse(raw, pos)
@@ -173,13 +179,15 @@ func (r *Reader) physical() ([]byte, error) {
 				return nil, r.tooLong(r.pos + 1)
 			}
 			next := end + 1
-			if r.buf[end] == '\r' && next < r.w && r.buf[next] == '\n' {
+			crlf := r.buf[end] == '\r' && next < r.w && r.buf[next] == '\n'
+			if crlf {
 				next++
-			} else if r.Strict {
-				return nil, &SyntaxError{Line: r.pos + 1, Msg: "line ends in a bare CR or LF, not CRLF"}
 			}
 			r.r = next
 			r.pos++
+			if !crlf && r.Strict {
+				return nil, &SyntaxError{Line: r.pos, Msg: "line ends in a bare CR or LF, not CRLF"}
+			}
 			return line, nil
 		}
 		scanned = r.w - r.r
@@ -189,11 +197,11 @@ func (r *Reader) physical() ([]byte, error) {
 				if len(line) > r.maxLine() {
 					return nil, r.tooLong(r.pos + 1)
 				}
-				if r.Strict {
-					return nil, &SyntaxError{Line: r.pos + 1, Msg: "last line doesn't end in CRLF"}
-				}
 				r.r = r.w
 				r.pos++
+				if r.Strict {
+					return nil, &SyntaxError{Line: r.pos, Msg: "last line doesn't end in CRLF"}
+				}
 				return line, nil
 			}
 			return nil, r.srcErr

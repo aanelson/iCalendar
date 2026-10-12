@@ -169,12 +169,16 @@ func TestLoad(t *testing.T) {
 		"/mozilla.org/20050126_1/America/New_York",
 		"/softwarestudio.org/Olson_20011030_5/America/New_York",
 		"/America/New_York",
+		"/./America/New_York",
 		"Eastern Standard Time",
 	} {
 		loc, err := Load(tzid)
 		if err != nil {
 			t.Errorf("Load(%q): %v", tzid, err)
 			continue
+		}
+		if strings.HasPrefix(loc.String(), ".") {
+			t.Errorf("Load(%q) is named %q", tzid, loc)
 		}
 		at := time.Date(2024, 7, 1, 12, 0, 0, 0, time.UTC)
 		if _, off := at.In(loc).Zone(); off != func() int { _, o := at.In(ny).Zone(); return o }() {
@@ -191,7 +195,7 @@ func TestLoad(t *testing.T) {
 			t.Errorf("Load(%q) offset %d, want %d", tzid, off, want)
 		}
 	}
-	for _, tzid := range []string{"", "Local", "Nowhere/Special", "(UTC-05:00) Eastern Time (US & Canada)", "../../etc/passwd", "/etc/localtime", "localtime", "LocalTime", "/usr/share/zoneinfo/localtime", "UTC+15", "GMT-04:75", "UTCX"} {
+	for _, tzid := range []string{"", "Local", "Nowhere/Special", "(UTC-05:00) Eastern Time (US & Canada)", "../../etc/passwd", "/etc/localtime", "localtime", "LocalTime", "/usr/share/zoneinfo/localtime", "/", "//", `"/"`, "UTC+15", "GMT-04:75", "UTCX"} {
 		if _, err := Load(tzid); !errors.Is(err, ErrUnknownZone) {
 			t.Errorf("Load(%q) = %v, want ErrUnknownZone", tzid, err)
 		}
@@ -232,8 +236,11 @@ func TestLoadRefusesHostZone(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
-	if got := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(out)), "PASS")); got != "" {
-		t.Error(got)
+	// Only the child's own lines: a coverage build adds its own.
+	for line := range strings.Lines(string(out)) {
+		if strings.HasPrefix(line, "Load(") || strings.HasPrefix(line, "the zoneinfo") {
+			t.Error(strings.TrimSpace(line))
+		}
 	}
 }
 

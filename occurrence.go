@@ -219,7 +219,7 @@ func (x *Expander) newStream(cal *Calendar, g *group, from, to time.Time, floati
 	for _, c := range g.overrides {
 		ov := Event{Item{c, cal}}
 		rid, _, err := ov.RecurrenceID()
-		if err != nil && (rid.IsZero() || rid.unresolved()) {
+		if unusable(rid, err) {
 			keep(err)
 			continue
 		}
@@ -238,7 +238,7 @@ func (x *Expander) newStream(cal *Calendar, g *group, from, to time.Time, floati
 	for k, ov := range best {
 		s.replaced[k] = true
 		start, err := ov.Start()
-		if err != nil && (start.IsZero() || start.unresolved()) {
+		if unusable(start, err) {
 			keep(err)
 			continue
 		}
@@ -257,7 +257,7 @@ func (x *Expander) newStream(cal *Calendar, g *group, from, to time.Time, floati
 	}
 	s.master = master.Component
 	start, err := master.Start()
-	if err != nil && (start.IsZero() || start.unresolved()) {
+	if unusable(start, err) {
 		keep(err)
 		return s, firstErr
 	}
@@ -289,7 +289,7 @@ func (x *Expander) newStream(cal *Calendar, g *group, from, to time.Time, floati
 		ps, err := p.Periods(master.resolver())
 		keep(err)
 		for _, per := range ps {
-			if !per.EndTime().Time().After(per.Start.Time()) {
+			if !per.valid() {
 				continue // err says why; the instance keeps the series' length
 			}
 			if s.periods == nil {

@@ -85,8 +85,7 @@ func TestConformanceParseGrammar(t *testing.T) {
 		{"FREQ=MINUTELY;BYSECOND=61", false},
 		{"FREQ=MINUTELY;BYSECOND=-1", false}, // no sign in "seconds"
 		{"FREQ=MINUTELY;BYSECOND=+1", false},
-		{"FREQ=MINUTELY;BYSECOND=005", false}, // 1*2DIGIT: at most two digits
-		{"FREQ=HOURLY;BYMINUTE=0,59", true},   // minutes = 1*2DIGIT ;0 to 59
+		{"FREQ=HOURLY;BYMINUTE=0,59", true}, // minutes = 1*2DIGIT ;0 to 59
 		{"FREQ=HOURLY;BYMINUTE=60", false},
 		{"FREQ=DAILY;BYHOUR=0,23", true}, // hour = 1*2DIGIT ;0 to 23
 		{"FREQ=DAILY;BYHOUR=24", false},
@@ -95,12 +94,10 @@ func TestConformanceParseGrammar(t *testing.T) {
 		{"FREQ=MONTHLY;BYMONTHDAY=0", false},
 		{"FREQ=MONTHLY;BYMONTHDAY=32", false},
 		{"FREQ=MONTHLY;BYMONTHDAY=-32", false},
-		{"FREQ=MONTHLY;BYMONTHDAY=001", false},
 		{"FREQ=YEARLY;BYYEARDAY=1,366,-1,-366,+366", true}, // ordyrday = 1*3DIGIT ;1 to 366
 		{"FREQ=YEARLY;BYYEARDAY=0", false},
 		{"FREQ=YEARLY;BYYEARDAY=367", false},
 		{"FREQ=YEARLY;BYYEARDAY=-367", false},
-		{"FREQ=YEARLY;BYYEARDAY=0001", false},
 		{"FREQ=YEARLY;BYWEEKNO=1,53,-1,-53,+20", true}, // weeknum = [plus / minus] ordwk ;1 to 53
 		{"FREQ=YEARLY;BYWEEKNO=0", false},
 		{"FREQ=YEARLY;BYWEEKNO=54", false},
@@ -120,8 +117,7 @@ func TestConformanceParseGrammar(t *testing.T) {
 		{"FREQ=YEARLY;BYDAY=MO1", false},
 		{"FREQ=YEARLY;BYDAY=XX", false},
 		{"FREQ=YEARLY;BYDAY=+MO", false}, // a sign needs an ordwk
-		{"FREQ=YEARLY;BYDAY=001MO", false},
-		{"FREQ=WEEKLY;WKST=SU", true}, // weekday = "SU" / "MO" / ...
+		{"FREQ=WEEKLY;WKST=SU", true},    // weekday = "SU" / "MO" / ...
 		{"FREQ=WEEKLY;WKST=1MO", false},
 		{"FREQ=WEEKLY;WKST=XX", false},
 		{"FREQ=DAILY;INTERVAL=2;COUNT=10", true}, // 1*DIGIT
@@ -178,11 +174,20 @@ func TestConformanceParseDocumentedChoices(t *testing.T) {
 		{"freq=daily;byday=mo", true, "architecture doc: names and values are case-insensitive"},
 		{"FREQ=DAILY;COUNT=3;", true, "architecture doc: an empty part is ignored"},
 		{"FREQ=DAILY;BYDAY=MO, TU, WE", true, "ParseRule doc: spaces around list items are ignored (a corpus feed writes this)"},
+		// The grammar's 1*2DIGIT and 1*3DIGIT leave no room for these, but
+		// the number is unambiguous, and refusing it would drop a feed's
+		// whole rule.
+		{"FREQ=MINUTELY;BYSECOND=005", true, "ParseRule doc: leading zeros are read"},
+		{"FREQ=YEARLY;BYYEARDAY=0001", true, "ParseRule doc: leading zeros are read"},
 	} {
 		_, err := recur.ParseRule(c.in)
 		if (err == nil) != c.ok {
 			t.Errorf("ParseRule(%q) = %v; want ok %v (%s)", c.in, err, c.ok, c.note)
 		}
+	}
+	if r := mustRule(t, "FREQ=MONTHLY;BYMONTHDAY=001;BYDAY=001MO"); !slices.Equal(r.ByMonthDay, []int{1}) ||
+		!slices.Equal(r.ByDay, []recur.WeekdayNum{{N: 1, Day: recur.Monday}}) {
+		t.Errorf("leading zeros read as BYMONTHDAY=%v BYDAY=%v", r.ByMonthDay, r.ByDay)
 	}
 	// 0MO: ordwk is 1 to 53, so the grammar has no 0MO. The architecture
 	// doc says a 0MO entry is dropped, as ical.net does; either reading

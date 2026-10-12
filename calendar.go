@@ -387,7 +387,7 @@ func (it Item) Recurrence() (*recur.Set, error) {
 
 func (it Item) recurrence(floating *time.Location) (*recur.Set, error) {
 	start, err := it.Start()
-	if err != nil && (start.IsZero() || start.unresolved()) {
+	if unusable(start, err) {
 		return nil, err
 	}
 	errs := []error{err}

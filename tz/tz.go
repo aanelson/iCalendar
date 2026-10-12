@@ -79,9 +79,11 @@ func load(tzid string) *time.Location {
 	}
 	try := func(n string) *time.Location {
 		// "Local" would be the host's zone, which a calendar can't mean; so
-		// would "localtime", which Debian links into its zoneinfo.
+		// would "localtime", which Debian links into its zoneinfo. "" is
+		// UTC to time.LoadLocation, and a "." segment only renames a zone.
 		base := n[strings.LastIndexByte(n, '/')+1:]
-		if n == "Local" || strings.EqualFold(base, "localtime") || strings.HasPrefix(n, "/") || strings.Contains(n, "..") {
+		if n == "" || n == "Local" || strings.EqualFold(base, "localtime") || strings.HasPrefix(n, "/") ||
+			strings.Contains(n, "..") || strings.Contains("/"+n, "/./") {
 			return nil
 		}
 		if loc, err := time.LoadLocation(n); err == nil {

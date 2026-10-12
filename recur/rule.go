@@ -174,10 +174,10 @@ func (e *ParseError) Error() string {
 // ParseRule reads a RECUR value such as "FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10".
 //
 // Part names and values are read case-insensitively, spaces around them and
-// around list items are ignored, and an empty part (a trailing ";") is
-// ignored, as most producers expect. Everything else follows the §3.3.10
-// grammar: an unknown or repeated part, a value out of its range or with
-// more digits than the grammar allows, a COUNT or INTERVAL below 1, or a
+// around list items are ignored, numbers may have leading zeros (BYMONTHDAY=
+// 001), and an empty part (a trailing ";") is ignored, as most producers
+// expect. Everything else follows the §3.3.10 grammar: an unknown or
+// repeated part, a value out of its range, a COUNT or INTERVAL below 1, or a
 // missing FREQ is an error. Constraints between parts (such as COUNT with
 // UNTIL) are checked by Validate, not here, so a rule that breaks one can
 // still be expanded.
@@ -298,11 +298,6 @@ func intList(s string, lo, hi int, signed bool) ([]int, error) {
 		n, err := number(item)
 		if err != nil {
 			return nil, err
-		}
-		// The grammar allows as many digits as hi has: 1*2DIGIT, or
-		// 1*3DIGIT for days of the year.
-		if len(item) > len(strconv.Itoa(hi)) {
-			return nil, fmt.Errorf("%q has too many digits", item)
 		}
 		if n < lo || n > hi {
 			return nil, fmt.Errorf("%d is outside %d to %d", n, lo, hi)
