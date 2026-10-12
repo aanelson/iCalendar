@@ -269,15 +269,23 @@ func TestHostileInputsAreLinear(t *testing.T) {
 	}
 	for name, gen := range cases {
 		t.Run(name, func(t *testing.T) {
+			// The fastest of a few runs: the first at a size also pays to
+			// grow the heap into fresh memory, which on a CI VM can cost
+			// more than the parse, and any one run can catch a GC cycle or
+			// a busy neighbour.
 			measure := func(n int) time.Duration {
 				in := gen(n)
-				start := time.Now()
-				r := NewReader(strings.NewReader(in))
-				r.MaxLineLength = 16 << 20
-				if _, err := r.ReadLine(); err != nil {
-					t.Fatal(err)
+				best := time.Duration(1<<63 - 1)
+				for range 3 {
+					start := time.Now()
+					r := NewReader(strings.NewReader(in))
+					r.MaxLineLength = 16 << 20
+					if _, err := r.ReadLine(); err != nil {
+						t.Fatal(err)
+					}
+					best = min(best, time.Since(start))
 				}
-				return time.Since(start)
+				return best
 			}
 			measure(1 << 16) // warm up
 			small, big := measure(1<<20), measure(4<<20)
