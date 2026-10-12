@@ -26,6 +26,7 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -78,8 +79,10 @@ func load(tzid string) *time.Location {
 		return nil
 	}
 	try := func(n string) *time.Location {
-		// "Local" would be the host's zone, which a calendar can't mean.
-		if n == "Local" || strings.HasPrefix(n, "/") || strings.Contains(n, "..") {
+		// "Local" would be the host's zone, which a calendar can't mean. So
+		// would "localtime": Debian-family zoneinfo links it (and, through
+		// the posix directory, posix/localtime) to /etc/localtime.
+		if n == "Local" || strings.EqualFold(path.Base(n), "localtime") || strings.HasPrefix(n, "/") || strings.Contains(n, "..") {
 			return nil
 		}
 		if loc, err := time.LoadLocation(n); err == nil {
