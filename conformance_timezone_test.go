@@ -453,7 +453,11 @@ func TestConformanceVTimezoneRequiredParts(t *testing.T) {
 				loc, err := z.Location()
 				switch {
 				case err != nil:
-					t.Logf("Location() error: %v", err)
+					// The doc promises errors.Is for a definition that
+					// can't be compiled.
+					if !errors.Is(err, tz.ErrInvalidDefinition) {
+						t.Errorf("Location() error %v doesn't wrap tz.ErrInvalidDefinition", err)
+					}
 				case tt.gap != "":
 					ccGap(t, tt.gap+" (schema validation is planned)")
 				default:

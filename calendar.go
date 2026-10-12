@@ -171,7 +171,7 @@ func (z Timezone) Definition() (tz.Definition, error) {
 		}
 		to := child.Get("TZOFFSETTO")
 		if to == nil {
-			return def, fmt.Errorf("ical: VTIMEZONE %q: %s has no TZOFFSETTO", def.TZID, child.Name)
+			return def, fmt.Errorf("%w %q: %s has no TZOFFSETTO", tz.ErrInvalidDefinition, def.TZID, child.Name)
 		}
 		var err error
 		if o.OffsetTo, err = to.UTCOffset(); err != nil {
@@ -194,7 +194,7 @@ func (z Timezone) Definition() (tz.Definition, error) {
 		}
 		p := child.Get("DTSTART")
 		if p == nil {
-			return def, fmt.Errorf("ical: VTIMEZONE %q: %s has no DTSTART", def.TZID, child.Name)
+			return def, fmt.Errorf("%w %q: %s has no DTSTART", tz.ErrInvalidDefinition, def.TZID, child.Name)
 		}
 		start, err := withoutTZID(p).DateTime(nil)
 		if err != nil {
