@@ -1,0 +1,5 @@
+bin/
+logs/*
+!logs/matrix.md
+!logs/corpus.md
+!logs/loadlocation-share.txt

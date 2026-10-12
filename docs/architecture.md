@@ -45,27 +45,33 @@ it.
 ## Why not the existing Go libraries
 
 Two audits done for the consuming app tested the Go options against
-hostile and real-world input. Their findings drove these decisions:
+hostile and real-world input. Their findings drove these decisions, and
+[`testdata/compare`](../testdata/compare) re-measures each row against
+golang-ical v0.3.7, emersion/go-ical and rrule-go v1.8.2 (last run
+2026-10-11; results in `testdata/compare/logs`):
 
 | Problem found | In | Response here |
 |---|---|---|
 | Panics on truncated or malformed lines | emersion/go-ical | Hand-written byte scanner; fuzzed (`FuzzReader`, `FuzzDecode`) |
 | Quadratic time on a long parameter value (1 MB → 25 s) | emersion/go-ical | Values are sub-slices of the line; 1 MiB parameter decodes in ms (`TestHostileFeeds`) |
-| Quadratic memory on many parameters (5 MB line → 4 min, 56 GB) | arran4/golang-ical | No per-parameter copy; `TestHostileInputsAreLinear` checks 1 vs 4 MiB scaling |
+| Quadratic time and allocation on many parameters or many parameter values (a 5 MiB line: 4 min, 9.8 TB allocated) | arran4/golang-ical | No per-parameter copy; `TestHostileInputsAreLinear` checks 1 vs 4 MiB scaling |
 | Regexes on every name and value | arran4/golang-ical | Byte loops; ~740 MB/s line scanning, ~290 MB/s full tree |
-| Empty or cut-off feed parses as success with 0 events | both | Missing `END:VCALENDAR` wraps `io.ErrUnexpectedEOF`, also in lenient mode |
+| Empty input, or a feed missing `END:VCALENDAR`, is a silent success; every truncation is a bare `io.EOF` | golang-ical; emersion/go-ical | Missing `END:VCALENDAR` wraps `io.ErrUnexpectedEOF`, also in lenient mode; input that isn't a calendar is an error |
 | `SUMMARY:Dinner, drinks` → `"Dinner"` | emersion/go-ical | Values stay raw; `Text()` never splits, `Texts()` always does |
 | Floating times and dates read in `time.Local` | arran4/golang-ical | `time.Local` is never read |
-| VTIMEZONE ignored; `TZID=Eastern Standard Time` fails | both | VTIMEZONE compiled to a real `*time.Location`; CLDR Windows table |
-| `time.LoadLocation` on every property (50% of CPU) | both | Zone lookups cached, failures included |
+| VTIMEZONE ignored (both); `TZID=Eastern Standard Time` fails (emersion/go-ical, and golang-ical without its `WithWindowsTimezoneMapping` option) | both | VTIMEZONE compiled to a real `*time.Location`; CLDR Windows table |
+| `time.LoadLocation` on every property (70–76% of CPU reading 20,000 zoned events) | both | Zone lookups cached, failures included |
 | `DURATION:P1D` treated as 24 hours | emersion/go-ical | Nominal and exact parts kept apart |
 | Lowercase names fail the whole feed | arran4/golang-ical | Names are case-insensitive (§2) |
-| Writer doesn't fold, or splits UTF-8 | both / ical.js | Folds at 75 octets on rune boundaries |
+| Writer doesn't fold (emersion/go-ical) or writes LF line ends by default (golang-ical) | both | Folds at 75 octets on rune boundaries, always CRLF |
+| Writer lets a CR or LF start a new line: a lone CR in a value (golang-ical), a CRLF in a parameter (emersion/go-ical) | both | TEXT escaped, parameters RFC 6868-encoded, other control characters refused |
+| A time in a spring-forward gap goes back an hour (`02:30` → 01:30 EST, not 03:30 EDT) | all three | §3.3.5 resolution in `civil.DateTime.In`; erratum 4271 for recurrences |
 | rrule-go walks from DTSTART on every query | teambition/rrule-go | Seeks to the window (~1 µs for a month of a 1990 daily series) |
 | rrule-go loops on `FREQ=HOURLY;INTERVAL=24;BYHOUR=11` | teambition/rrule-go | Static check plus a proven termination bound |
 | rrule-go duplicates instances for `BYSECOND=0,0` | teambition/rrule-go | Every BYxxx list is a set |
 | rrule-go walks to year 9999 on unmatchable rules | teambition/rrule-go | Detected up front, or bounded and remembered |
-| rrule-go's iterator mutates its rule | teambition/rrule-go | Rules are values; iterators hold their own state |
+| rrule-go's iterator mutates its rule (a data race when goroutines share one) | teambition/rrule-go | Rules are values; iterators hold their own state |
+| rrule-go silently ends unbounded rules ~292 years after DTSTART | teambition/rrule-go | Iteration runs to year 9999 |
 
 ## Package layout
 
@@ -197,9 +203,10 @@ b, err := cal.Bytes()
 - A stream may hold several VCALENDARs (§3.4); `Decode` returns them in
   turn.
 - **Truncation is never success.** Input that ends inside a component is
-  an error wrapping `io.ErrUnexpectedEOF`, in both modes. Empty input is
-  `io.EOF`; input with content but no VCALENDAR at all (an HTML error
-  page, a vCard, a bare VEVENT) is a `*SyntaxError`, so a broken feed
+  an error wrapping `io.ErrUnexpectedEOF`, in both modes. Empty or blank
+  input is `io.EOF`; input with content but no VCALENDAR at all (an HTML
+  error page, a vCard, a bare VEVENT) is a `*SyntaxError` wrapping
+  `io.ErrUnexpectedEOF`, as `Parse` reports empty input, so a broken feed
   doesn't read as an empty one. (A cut-off final line may be reported first as the malformed
   line it is: in strict mode any line without its CRLF, in both modes a
   bare `BEGIN:`. It is still an error.)
@@ -558,6 +565,7 @@ doesn't need it to round-trip, which is why it can come later.
 | Fuzzing | `FuzzReader`, `FuzzDecode`, `FuzzRule` | clean (4 min each: 15M, 13M, 19M executions) |
 | Independent review | A second pass over the engine and expander, with a 40,000-rule randomized differential run, found 9 bugs (DST-gap ordering, instants vs. wall clock for RDATE/EXDATE, an all-day window edge, EXRULE counting, a slow-to-prove empty BYSETPOS, …) | all fixed, each with a regression test |
 | Hostile input | 1 MiB parameter, 5 MiB of parameters, 1M comma values | linear |
+| Comparison | `testdata/compare` (a nested module): the same RFC-derived probes, hostile inputs and corpus against golang-ical, emersion/go-ical and rrule-go, each probe in its own subprocess with a timeout | this library: no wrong value, panic or hang; golang-ical fails 12 probes (10 with its options), emersion/go-ical 19, rrule-go 7 |
 
 The third-party fixtures are a nested Go module (`testdata/thirdparty`),
 so they're excluded from the library's module zip and users never download

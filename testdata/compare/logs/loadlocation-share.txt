@@ -1,0 +1,20 @@
+== this
+Duration: 303.96ms, Total samples = 170ms (55.93%)
+Showing nodes accounting for 170ms, 100% of 170ms total
+      flat  flat%   sum%        cum   cum%
+== golang-ical+opts
+Duration: 4.06s, Total samples = 4.23s (104.20%)
+Showing nodes accounting for 3.99s, 94.33% of 4.23s total
+      flat  flat%   sum%        cum   cum%
+         0     0% 71.87%      3.04s 71.87%  time.LoadLocation
+         0     0% 71.87%      3.04s 71.87%  time.loadTzinfo
+         0     0% 71.87%      3.04s 71.87%  time.loadTzinfoFromDirOrZip
+         0     0% 71.87%      3.04s 71.87%  time.readFile
+== emersion
+Duration: 3.96s, Total samples = 4.13s (104.20%)
+Showing nodes accounting for 3.85s, 93.22% of 4.13s total
+      flat  flat%   sum%        cum   cum%
+         0     0% 77.48%      3.20s 77.48%  time.LoadLocation
+         0     0% 77.48%      3.20s 77.48%  time.loadTzinfo
+         0     0% 77.48%      3.20s 77.48%  time.loadTzinfoFromDirOrZip
+         0     0% 77.48%      3.20s 77.48%  time.readFile
