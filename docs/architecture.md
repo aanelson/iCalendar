@@ -113,9 +113,9 @@ err = w.WriteLine(line); w.Flush()
 
 - One left-to-right byte scan, no regexes. Names are interned so common
   ones don't allocate.
-- Unfolding accepts CRLF, LF and lone CR, and SPACE or HTAB
-  continuations. It works on bytes, so a fold inside a UTF-8 sequence
-  comes back whole.
+- Unfolding accepts CRLF, LF and lone CR (`Strict`: CRLF only), and SPACE
+  or HTAB continuations. It works on bytes, so a fold inside a UTF-8
+  sequence comes back whole.
 - `MaxLineLength` (default 1 MiB, unfolded) is never recovered from.
 - DQUOTE-quoted parameter values; RFC 6868 `^n ^' ^^` decoded on read and
   encoded on write.
@@ -123,8 +123,9 @@ err = w.WriteLine(line); w.Flush()
 - Lenient mode (the default) recovers and calls `Warn` with a
   `*SyntaxError`: an unparseable line is skipped; a parameter with no `=`,
   text after a closing quote, a quote inside an unquoted value, control
-  characters in parameters, empty lines and stray continuations are read
-  the way most readers read them. `Strict` makes each an error.
+  characters in parameters and values, empty lines and stray continuations
+  are read the way most readers read them. `Strict` makes each an error,
+  and also rejects malformed UTF-8, which lenient mode keeps as it is.
 - The writer folds at 75 octets on rune boundaries, always writes CRLF,
   quotes parameter values containing `,;:`, and rejects names that
   aren't tokens and any control character except HTAB, so no value can
@@ -201,8 +202,10 @@ b, err := cal.Bytes()
   the malformed line it is.)
 - Lenient recoveries at this layer: lines outside a VCALENDAR are
   ignored; an END naming an enclosing component closes the ones in
-  between; an END for nothing open is ignored; a missing PRODID or
-  VERSION is reported.
+  between; an END for nothing open is ignored; parameters or space
+  around a BEGIN or END name, a missing or repeated PRODID or VERSION and
+  a repeated CALSCALE or METHOD are reported. Strict mode also rejects a
+  VCALENDAR with no component (§3.6).
 - Never recovered: truncation, a BEGIN that isn't a name, nesting over
   `MaxDepth`, a line over `MaxLineLength`.
 
