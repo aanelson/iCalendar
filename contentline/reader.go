@@ -321,6 +321,13 @@ func (r *Reader) parse(b []byte, pos int) (Line, error) {
 			if err != nil {
 				return l, err
 			}
+			if p.Values == nil {
+				k := 1
+				if i+n < len(b) && b[i+n] == ',' {
+					k += countValues(b[i+n+1:])
+				}
+				p.Values = make([]string, 0, k)
+			}
 			p.Values = append(p.Values, v)
 			i += n
 			if i < len(b) && b[i] == ',' {
@@ -413,6 +420,26 @@ func (r *Reader) checkParamText(v []byte, pos int, prop, param string) error {
 }
 
 func isParamDelim(c byte) bool { return c == ',' || c == ';' || c == ':' }
+
+// countValues returns how many comma-separated values the rest of a
+// parameter's value list, at the start of b, holds, so the list is
+// allocated once: grown by appending, a list of a million values would
+// copy itself many times over.
+func countValues(b []byte) int {
+	n, quoted := 1, false
+	for _, c := range b {
+		switch {
+		case c == '"':
+			quoted = !quoted
+		case quoted:
+		case c == ',':
+			n++
+		case c == ';' || c == ':':
+			return n
+		}
+	}
+	return n
+}
 
 // decode6868 decodes RFC 6868 parameter value escapes: ^n is a newline, ^'
 // a double quote and ^^ a caret. A caret before anything else, ^N included,
