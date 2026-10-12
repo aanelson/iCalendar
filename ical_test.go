@@ -315,7 +315,7 @@ func TestDuration(t *testing.T) {
 		want Duration
 		out  string
 	}{
-		{"P15DT5H0M20S", Duration{Days: 15, Hours: 5, Seconds: 20}, "P15DT5H20S"},
+		{"P15DT5H0M20S", Duration{Days: 15, Hours: 5, Seconds: 20}, "P15DT5H0M20S"},
 		{"P7W", Duration{Weeks: 7}, "P7W"},
 		{"-PT15M", Duration{Negative: true, Minutes: 15}, "-PT15M"},
 		{"+P1D", Duration{Days: 1}, "P1D"},

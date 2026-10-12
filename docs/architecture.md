@@ -245,10 +245,12 @@ v.Add(d Duration) DateTime        // §3.3.6, below
 ```
 
 It keeps all three forms of §3.3.5 and the TZID text, so it re-encodes
-exactly. A value that a computation produced (`Add`, or an occurrence
-from the `Expander`) also remembers its exact instant, because the wall
-clock and TZID alone can't say which of two repeated 01:30s it is: one
-hour after the first 01:30 of a fall-back night is the second. Lenient reading accepts an 8-digit value without `VALUE=DATE`, a
+exactly. A value that a computation produced (`Add`, `NewDateTime`, or an
+occurrence from the `Expander`) also remembers its exact instant, because
+the wall clock and TZID alone can't say which of two repeated 01:30s it
+is: one hour after the first 01:30 of a fall-back night is the second.
+Since a TZID's wall clock names the first, a setter writes such a value in
+UTC. Lenient reading accepts an 8-digit value without `VALUE=DATE`, a
 time without seconds (`19970701T1300Z`), and a DATE with a `Z`
 (`20131210Z`), all seen in real feeds.
 

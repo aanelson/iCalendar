@@ -183,7 +183,11 @@ func NewDateTime(t time.Time) DateTime {
 	loc := t.Location()
 	if loc != time.UTC && loc != time.Local && loc.String() != "" {
 		if _, err := tz.Load(loc.String()); err == nil {
-			return DateTime{DateTime: civil.DateTimeOf(t), TZID: loc.String(), Loc: loc}
+			v := DateTime{DateTime: civil.DateTimeOf(t), TZID: loc.String(), Loc: loc}
+			if !v.DateTime.In(loc).Equal(t) {
+				v = v.withInstant(t) // the second of two repeated readings
+			}
+			return v
 		}
 	}
 	return DateTime{DateTime: civil.DateTimeOf(t.UTC()), UTC: true}
@@ -370,17 +374,28 @@ func (p *Property) SetDateTime(v DateTime) {
 
 // SetDateTimes sets the value to a comma-separated list of DATE or
 // DATE-TIME values. They are written in the form of the first; later
-// values in other zones are converted to it.
+// values in other zones are converted to it. A TZID's wall clock names the
+// first of two repeated readings (RFC 5545 §3.3.5), so a list holding the
+// second, when clocks go back, is written in UTC instead.
 func (p *Property) SetDateTimes(vs ...DateTime) {
 	if len(vs) == 0 {
 		p.Value = ""
 		return
 	}
 	first := vs[0]
+	if first.TZID != "" && !first.UTC && !first.IsDate && first.Loc != nil {
+		for _, v := range vs {
+			if !v.IsDate && v.Location() != nil && !civil.DateTimeOf(v.In(first.Loc)).In(first.Loc).Equal(v.Time()) {
+				first = NewDateTime(first.Time().UTC())
+				break
+			}
+		}
+	}
 	p.Params.Del("TZID")
 	if first.IsDate {
 		p.Params.Set("VALUE", "DATE")
-	} else {
+	} else if !strings.EqualFold(p.Params.Get("VALUE"), "DATE-TIME") {
+		// Keep an explicit DATE-TIME: TRIGGER needs it.
 		p.Params.Del("VALUE")
 	}
 	if first.TZID != "" && !first.UTC && !first.IsDate {
@@ -388,7 +403,9 @@ func (p *Property) SetDateTimes(vs ...DateTime) {
 	}
 	var b []byte
 	for i, v := range vs {
-		if i > 0 {
+		if i == 0 {
+			v = first
+		} else {
 			b = append(b, ',')
 			v = convertForm(v, first)
 		}
@@ -480,7 +497,9 @@ func (d Duration) String() string {
 		if d.Hours != 0 {
 			b.WriteString(strconv.Itoa(d.Hours) + "H")
 		}
-		if d.Minutes != 0 {
+		// Seconds can only follow hours by way of minutes (dur-hour), as
+		// in the RFC's P15DT5H0M20S.
+		if d.Minutes != 0 || d.Hours != 0 && d.Seconds != 0 {
 			b.WriteString(strconv.Itoa(d.Minutes) + "M")
 		}
 		if d.Seconds != 0 || d.IsZero() {
@@ -566,8 +585,12 @@ func (p *Property) Duration() (Duration, error) {
 	return d, nil
 }
 
-// SetDuration sets the value to d.
+// SetDuration sets the value to d, dropping a VALUE parameter that names
+// another type (an absolute TRIGGER's VALUE=DATE-TIME).
 func (p *Property) SetDuration(d Duration) {
+	if !strings.EqualFold(p.Params.Get("VALUE"), "DURATION") {
+		p.Params.Del("VALUE")
+	}
 	p.Value = d.String()
 }
 
@@ -651,11 +674,22 @@ func (p *Property) SetInt(n int) { p.Value = strconv.Itoa(n) }
 
 // Float returns the value read as a FLOAT.
 func (p *Property) Float() (float64, error) {
-	f, err := strconv.ParseFloat(strings.TrimSpace(p.Value), 64)
+	f, err := parseFloat(p.Value)
 	if err != nil {
 		return 0, p.valueError(err)
 	}
 	return f, nil
+}
+
+// parseFloat reads a FLOAT (RFC 5545 §3.3.7). strconv.ParseFloat also reads
+// NaN, Inf, hex and digits with underscores, which aren't decimal numbers,
+// so only signs, digits, a point and an exponent get that far.
+func parseFloat(s string) (float64, error) {
+	s = strings.TrimSpace(s)
+	if strings.Trim(s, "+-.0123456789eE") != "" {
+		return 0, fmt.Errorf("%q is not a FLOAT", s)
+	}
+	return strconv.ParseFloat(s, 64)
 }
 
 // Bool returns the value read as a BOOLEAN: TRUE or FALSE, in any case.
@@ -694,6 +728,9 @@ func ParseUTCOffset(s string) (int, error) {
 		}
 		switch i {
 		case 1:
+			if v > 23 {
+				return 0, fmt.Errorf("UTC offset %q has hours over 23", s)
+			}
 			n += v * 3600
 		case 3:
 			if v > 59 {
@@ -753,8 +790,8 @@ func (p *Property) Geo() (lat, lon float64, err error) {
 	if !ok {
 		return 0, 0, p.valueError(errors.New("GEO needs latitude;longitude"))
 	}
-	if lat, err = strconv.ParseFloat(strings.TrimSpace(a), 64); err == nil {
-		lon, err = strconv.ParseFloat(strings.TrimSpace(b), 64)
+	if lat, err = parseFloat(a); err == nil {
+		lon, err = parseFloat(b)
 	}
 	if err != nil {
 		return 0, 0, p.valueError(err)
