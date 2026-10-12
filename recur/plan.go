@@ -114,8 +114,10 @@ func compile(r Rule, start civil.DateTime, allDay bool) *plan {
 	//     BYMONTH is given) and day of month; MONTHLY its day of month;
 	//     WEEKLY its weekday.
 	//   - YEARLY with BYWEEKNO but no BYDAY takes DTSTART's weekday in
-	//     each listed week, as BYMONTH takes DTSTART's day in each month.
-	//   - YEARLY with BYMONTHDAY but no BYMONTH takes DTSTART's month.
+	//     each listed week, as BYMONTH takes DTSTART's day in each month
+	//     (unless BYMONTHDAY or BYYEARDAY already picks the day).
+	//   - YEARLY with BYMONTHDAY but no BYMONTH takes DTSTART's month
+	//     (unless BYWEEKNO or BYYEARDAY already places the day in the year).
 	//
 	// python-dateutil and its ports differ on the last two, expanding to
 	// every day of the week and every month.
