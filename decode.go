@@ -38,7 +38,9 @@ const (
 // VCALENDAR are ignored. What it never recovers from is losing data
 // silently: input that ends inside a component is an error wrapping
 // io.ErrUnexpectedEOF, never a shorter calendar, and so is a line over
-// MaxLineLength or nesting deeper than MaxDepth.
+// MaxLineLength or nesting deeper than MaxDepth. Input with content but no
+// VCALENDAR at all (an HTML error page, a vCard) is an error too, not an
+// empty stream.
 //
 // Set the fields before the first call to Decode.
 type Decoder struct {
@@ -54,8 +56,10 @@ type Decoder struct {
 	// DefaultMaxDepth.
 	MaxDepth int
 
-	src io.Reader
-	r   *contentline.Reader
+	src     io.Reader
+	r       *contentline.Reader
+	found   bool // a BEGIN:VCALENDAR has been read
+	skipped bool // content was skipped before it
 }
 
 // NewDecoder returns a decoder reading from r.
@@ -84,13 +88,17 @@ func Parse(r io.Reader) (*Calendar, error) {
 }
 
 // Decode reads the next VCALENDAR. It returns io.EOF, unwrapped, when the
-// input holds no further calendar.
+// input holds no further calendar: at once for empty input, but input that
+// held content and no calendar at all is a *SyntaxError.
 func (d *Decoder) Decode() (*Calendar, error) {
 	if d.r == nil {
 		d.r = contentline.NewReader(d.src)
 		d.r.Strict = d.Strict
-		if d.Warn != nil {
-			d.r.Warn = func(err error) { d.Warn(d.wrap(err)) }
+		d.r.Warn = func(err error) {
+			d.skipped = d.skipped || !d.found
+			if d.Warn != nil {
+				d.Warn(d.wrap(err))
+			}
 		}
 		d.r.MaxLineLength = d.MaxLineLength
 	}
@@ -104,6 +112,9 @@ func (d *Decoder) Decode() (*Calendar, error) {
 	for {
 		l, err := d.r.ReadLine()
 		if err == io.EOF {
+			if d.skipped && !d.found {
+				return nil, &SyntaxError{Line: 1, Msg: "no VCALENDAR in the input"}
+			}
 			return nil, io.EOF
 		}
 		if err != nil {
@@ -113,9 +124,11 @@ func (d *Decoder) Decode() (*Calendar, error) {
 			if _, err := d.blockName(l); err != nil {
 				return nil, err
 			}
+			d.found = true
 			start = l.Pos
 			break
 		}
+		d.skipped = d.skipped || !d.found
 		if err := d.deviate(l.Pos, "%s:%s outside a VCALENDAR", l.Name, l.Value); err != nil {
 			return nil, err
 		}

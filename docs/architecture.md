@@ -198,7 +198,9 @@ b, err := cal.Bytes()
   turn.
 - **Truncation is never success.** Input that ends inside a component is
   an error wrapping `io.ErrUnexpectedEOF`, in both modes. Empty input is
-  `io.EOF`. (A cut-off final line may be reported first as the malformed
+  `io.EOF`; input with content but no VCALENDAR at all (an HTML error
+  page, a vCard, a bare VEVENT) is a `*SyntaxError`, so a broken feed
+  doesn't read as an empty one. (A cut-off final line may be reported first as the malformed
   line it is: in strict mode any line without its CRLF, in both modes a
   bare `BEGIN:`. It is still an error.)
 - Lenient recoveries at this layer: lines outside a VCALENDAR are

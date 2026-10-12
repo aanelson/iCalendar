@@ -166,6 +166,44 @@ func TestLenientRecoveries(t *testing.T) {
 	}
 }
 
+// Input with content but no calendar is an error, not an empty stream, so a
+// feed that comes back as an error page doesn't read as an empty calendar.
+func TestDecodeNoCalendar(t *testing.T) {
+	cal := "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//x//EN\r\nEND:VCALENDAR\r\n"
+	for _, tc := range []struct {
+		name, in string
+		cals     int // calendars before the end
+		eof      bool
+	}{
+		{"empty", "", 0, true},
+		{"BOM only", "\xef\xbb\xbf", 0, true},
+		{"HTML page", "<!DOCTYPE html>\r\n<html><body>Not Found</body></html>\r\n", 0, false},
+		{"vCard", "BEGIN:VCARD\r\nVERSION:4.0\r\nFN:A\r\nEND:VCARD\r\n", 0, false},
+		{"bare VEVENT", "BEGIN:VEVENT\r\nUID:1\r\nEND:VEVENT\r\n", 0, false},
+		{"blank lines", "\r\n\r\n", 0, false},
+		{"calendar then junk", cal + "<html>\r\nX:1\r\n", 1, true},
+		{"junk then calendar", "<html>\r\n" + cal, 1, true},
+	} {
+		for _, warn := range []bool{false, true} {
+			d := NewDecoder(strings.NewReader(tc.in))
+			if warn {
+				d.Warn = func(error) {}
+			}
+			n := 0
+			var err error
+			for err == nil {
+				if _, err = d.Decode(); err == nil {
+					n++
+				}
+			}
+			var se *SyntaxError
+			if n != tc.cals || tc.eof && err != io.EOF || !tc.eof && !errors.As(err, &se) {
+				t.Errorf("%s (Warn set: %v): %d calendars, then %v", tc.name, warn, n, err)
+			}
+		}
+	}
+}
+
 func TestDepthLimit(t *testing.T) {
 	in := "BEGIN:VCALENDAR\r\n" + strings.Repeat("BEGIN:X\r\n", 100)
 	d := NewDecoder(strings.NewReader(in))

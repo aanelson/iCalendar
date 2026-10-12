@@ -158,6 +158,8 @@ func category(err error) string {
 		return "too deep"
 	case strings.Contains(err.Error(), "not a component name"):
 		return "bad BEGIN"
+	case strings.Contains(err.Error(), "no VCALENDAR"):
+		return "no VCALENDAR"
 	}
 	return "other"
 }
