@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Test (Go ${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The oldest Go that go.mod allows, and the current release.
+          - name: go.mod
+            version-file: go.mod
+          - name: stable
+            version: stable
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ matrix.version }}
+          go-version-file: ${{ matrix.version-file }}
+          cache: false # no dependencies, and the tests build in seconds
+      - run: go version
+      - run: go test ./...
+      - name: go test -race
+        # -short skips the tests that time themselves (TestHostileFeeds and
+        # TestHostileInputsAreLinear), which the race detector slows past
+        # their limits; the step above runs them.
+        run: go test -race -short ./...
+      - name: Check the fixture suites ran
+        # The corpus and vector tests skip themselves when their testdata is
+        # missing, which would pass silently. A top-level skip means that
+        # happened; per-vector skips (subtests, indented) are expected.
+        run: |
+          if go test -count=1 -v ./... | grep '^--- SKIP'; then
+            echo "::error::A test skipped at top level; is its testdata missing?"
+            exit 1
+          fi
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache: false
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "::error::These files need gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: go mod tidy
+        run: go mod tidy -diff
+      - run: go vet ./...
+      - name: staticcheck
+        run: go run honnef.co/go/tools/cmd/staticcheck@2026.2.2 ./...

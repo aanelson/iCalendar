@@ -187,7 +187,7 @@ func TestLoad(t *testing.T) {
 			t.Errorf("Load(%q) offset %d, want %d", tzid, off, want)
 		}
 	}
-	for _, tzid := range []string{"", "Local", "Nowhere/Special", "(UTC-05:00) Eastern Time (US & Canada)", "../../etc/passwd", "/etc/localtime", "UTC+15", "GMT-04:75", "UTCX"} {
+	for _, tzid := range []string{"", "Local", "Nowhere/Special", "(UTC-05:00) Eastern Time (US & Canada)", "../../etc/passwd", "/etc/localtime", "localtime", "posix/localtime", "LocalTime", "UTC+15", "GMT-04:75", "UTCX"} {
 		if _, err := Load(tzid); !errors.Is(err, ErrUnknownZone) {
 			t.Errorf("Load(%q) = %v, want ErrUnknownZone", tzid, err)
 		}
