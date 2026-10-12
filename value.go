@@ -193,6 +193,10 @@ func NewDateTime(t time.Time) DateTime {
 // DATE-TIME.
 func (v DateTime) Floating() bool { return !v.UTC && v.TZID == "" }
 
+// unresolved reports whether v names a zone that couldn't be resolved, so
+// it has no instant: Time's UTC reading of it is only a fallback.
+func (v DateTime) unresolved() bool { return v.TZID != "" && v.Loc == nil }
+
 // Location returns the zone v is in: time.UTC, the resolved TZID, or nil
 // for a floating value (or a TZID that couldn't be resolved).
 func (v DateTime) Location() *time.Location {
