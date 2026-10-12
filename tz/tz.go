@@ -78,8 +78,10 @@ func load(tzid string) *time.Location {
 		return nil
 	}
 	try := func(n string) *time.Location {
-		// "Local" would be the host's zone, which a calendar can't mean.
-		if n == "Local" || strings.HasPrefix(n, "/") || strings.Contains(n, "..") {
+		// "Local" would be the host's zone, which a calendar can't mean; so
+		// would "localtime", which Debian links into its zoneinfo.
+		base := n[strings.LastIndexByte(n, '/')+1:]
+		if n == "Local" || strings.EqualFold(base, "localtime") || strings.HasPrefix(n, "/") || strings.Contains(n, "..") {
 			return nil
 		}
 		if loc, err := time.LoadLocation(n); err == nil {
@@ -93,11 +95,12 @@ func load(tzid string) *time.Location {
 	if iana, ok := windowsZones[name]; ok {
 		return try(iana)
 	}
-	// A globally unique TZID (RFC 5545 §3.8.3.1 gives "/example.org/…")
-	// often ends in an IANA name: drop leading segments until one loads.
+	// A globally unique TZID (RFC 5545 §3.2.19's "/" prefix, §3.8.3.1's
+	// "/example.org/…") often is or ends in an IANA name, as in
+	// "/Europe/Stockholm": drop leading segments until one loads.
 	if strings.HasPrefix(name, "/") {
 		parts := strings.Split(strings.Trim(name, "/"), "/")
-		for i := 1; i < len(parts); i++ {
+		for i := range parts {
 			if loc := try(strings.Join(parts[i:], "/")); loc != nil {
 				return loc
 			}
