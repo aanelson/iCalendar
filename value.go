@@ -392,10 +392,17 @@ func (p *Property) SetDateTimes(vs ...DateTime) {
 		}
 	}
 	p.Params.Del("TZID")
-	if first.IsDate {
+	switch {
+	case first.IsDate:
 		p.Params.Set("VALUE", "DATE")
-	} else if !strings.EqualFold(p.Params.Get("VALUE"), "DATE-TIME") {
-		// Keep an explicit DATE-TIME: TRIGGER needs it.
+	case strings.EqualFold(p.Name, "TRIGGER"):
+		// TRIGGER defaults to DURATION, and an absolute one is in UTC
+		// (§3.8.6.3).
+		p.Params.Set("VALUE", "DATE-TIME")
+		if first.Location() != nil {
+			first = NewDateTime(first.Time().UTC())
+		}
+	case !strings.EqualFold(p.Params.Get("VALUE"), "DATE-TIME"):
 		p.Params.Del("VALUE")
 	}
 	if first.TZID != "" && !first.UTC && !first.IsDate {

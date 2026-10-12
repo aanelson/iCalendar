@@ -461,13 +461,19 @@ func TestConformanceValueSetDateTime(t *testing.T) {
 }
 
 func TestConformanceValueSetDateTimeNonDefaultType(t *testing.T) {
-	// §3.2.20 as above, for a TRIGGER that was relative: the setter would
-	// have to know that TRIGGER defaults to DURATION.
+	// §3.2.20 as above, for a TRIGGER that was relative: the setter has to
+	// know that TRIGGER defaults to DURATION. §3.8.6.3: an absolute
+	// trigger's "value MUST specify a UTC-formatted DATE-TIME value", so a
+	// zoned one is converted.
+	ny, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Skip(err)
+	}
 	p := ical.NewProperty("TRIGGER", "-PT15M")
-	p.SetDateTime(ical.NewDateTime(time.Date(1998, 4, 3, 12, 0, 0, 0, time.UTC)))
-	if !strings.EqualFold(p.Params.Get("VALUE"), "DATE-TIME") {
-		t.Skipf("KNOWN GAP: SetDateTime on a relative TRIGGER wrote %q with no VALUE=DATE-TIME, so it reads as a DURATION; "+
-			"setters don't know each property's default value type (the planned schema, docs/architecture.md)", p.Value)
+	p.SetDateTime(ical.NewDateTime(time.Date(1998, 4, 3, 7, 0, 0, 0, ny)))
+	if !strings.EqualFold(p.Params.Get("VALUE"), "DATE-TIME") || p.Params.Get("TZID") != "" || p.Value != "19980403T120000Z" {
+		t.Errorf("SetDateTime on a relative TRIGGER wrote %q with VALUE=%q TZID=%q; want VALUE=DATE-TIME:19980403T120000Z",
+			p.Value, p.Params.Get("VALUE"), p.Params.Get("TZID"))
 	}
 }
 
