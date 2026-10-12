@@ -1,5 +1,7 @@
 # iCalendar
 
+[![CI](https://github.com/aanelson/iCalendar/actions/workflows/ci.yml/badge.svg)](https://github.com/aanelson/iCalendar/actions/workflows/ci.yml)
+
 A dependency-free Go library for iCalendar (RFC 5545): parsing, writing,
 time zones, and recurrence expansion with its own date generator.
 
