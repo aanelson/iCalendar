@@ -42,10 +42,11 @@ type Observance struct {
 	RDates []civil.DateTime
 }
 
-// Horizon is the last year Compile lists transitions for explicitly. Past
-// it, a zone whose final rules are ordinary annual ones keeps following
-// them (through the POSIX TZ rule TZif files end with); any other zone
-// stays at its last offset.
+// Horizon is the last year Compile lists transitions for explicitly, and
+// DefinitionOf lists them through. Past it, a zone whose final rules are
+// ordinary annual ones keeps following them (through the POSIX TZ rule
+// TZif files end with, or an open-ended RRULE); any other zone stays at
+// its last offset.
 const Horizon = 2200
 
 // Limits on what one VTIMEZONE may expand to. Real zones have a few
@@ -262,8 +263,11 @@ func openEnded(o *Observance) bool {
 }
 
 // posixRule writes an observance's open-ended rule as a POSIX TZ date and
-// time, "Mm.w.d/time", when it is an annual nth-weekday rule: the form
-// nearly every VTIMEZONE uses.
+// time, "Mm.w.d/time", when it is an annual rule for a weekday: the nth or
+// last in a month, the form nearly every VTIMEZONE uses, or the first on
+// or after a given day. The last is written as a day of the week and a
+// time up to 167 hours after it, as the IANA database writes such rules
+// (RFC 9636 §3.3.1): Friday on or after March 23 at 02:00 is "M3.4.4/26".
 func posixRule(o *Observance) (string, bool) {
 	var rule *recur.Rule
 	for i := range o.Rules {
@@ -272,30 +276,59 @@ func posixRule(o *Observance) (string, bool) {
 		}
 	}
 	r := rule
-	if r.Freq != recur.Yearly || max(r.Interval, 1) != 1 || len(r.ByMonth) != 1 || len(r.ByDay) != 1 ||
-		len(r.ByHour)+len(r.ByMinute)+len(r.BySecond)+len(r.ByYearDay)+len(r.ByWeekNo)+len(r.BySetPos) > 0 {
+	if r.Freq != recur.Yearly || max(r.Interval, 1) != 1 || len(r.ByDay) != 1 ||
+		len(r.ByHour)+len(r.ByMinute)+len(r.BySecond)+len(r.ByWeekNo)+len(r.BySetPos) > 0 {
 		return "", false
 	}
 	day := r.ByDay[0]
-	week := day.N
+	// The weekday's 7-day window starts on day `from` of month, or is the
+	// last week of the month when from is 0.
+	var month, from int
 	switch {
-	case len(r.ByMonthDay) == 0 && week >= 1 && week <= 4:
-	case len(r.ByMonthDay) == 0 && week == -1:
-		week = 5
-	case len(r.ByMonthDay) == 7 && week == 0:
+	case len(r.ByMonth) == 1 && len(r.ByMonthDay)+len(r.ByYearDay) == 0 && day.N >= 1 && day.N <= 4:
+		month, from = r.ByMonth[0], 7*(day.N-1)+1
+	case len(r.ByMonth) == 1 && len(r.ByMonthDay)+len(r.ByYearDay) == 0 && day.N == -1:
+		month = r.ByMonth[0]
+	case len(r.ByMonth) == 1 && len(r.ByYearDay) == 0 && day.N == 0:
 		// The RFC 2445 style: BYDAY=SU;BYMONTHDAY=8,9,10,11,12,13,14 is
-		// the second Sunday.
-		days := slices.Clone(r.ByMonthDay)
-		slices.Sort(days)
-		if days[0] < 1 || (days[0]-1)%7 != 0 || days[6] != days[0]+6 || days[0] > 22 {
+		// the second Sunday. Any 7 days the month always has will do.
+		first, ok := sevenDays(r.ByMonthDay)
+		if !ok || first < 1 || first+6 > shortest(time.Month(r.ByMonth[0])) {
 			return "", false
 		}
-		week = (days[0]-1)/7 + 1
+		month, from = r.ByMonth[0], first
+	case len(r.ByMonth)+len(r.ByMonthDay) == 0 && day.N == 0:
+		// Days of the year name the same dates every year counted from the
+		// start up to February 28 (day 59), or from the end after it.
+		first, ok := sevenDays(r.ByYearDay)
+		var d civil.Date
+		switch {
+		case ok && first >= 1 && first+6 <= 59:
+			d = civil.Date{Year: 2001, Month: time.January, Day: 1}.AddDays(first - 1)
+		case ok && first >= -306 && first+6 <= -1:
+			d = civil.Date{Year: 2001, Month: time.December, Day: 31}.AddDays(first + 1)
+		default:
+			return "", false
+		}
+		month, from = int(d.Month), d.Day
 	default:
 		return "", false
 	}
-	secs := o.Start.SecondOfDay()
-	t := fmt.Sprintf("M%d.%d.%d", r.ByMonth[0], week, int(day.Day.Time()))
+	// POSIX counts the 1st to 5th (last) week of the month. A window that
+	// starts later in the week is that week's weekday some days earlier,
+	// plus as many days.
+	week, shift := 5, 0
+	switch {
+	case from >= 1 && from <= 28:
+		week, shift = (from-1)/7+1, (from-1)%7
+	case from > 28:
+		if month == 2 {
+			return "", false
+		}
+		shift = from - (shortest(time.Month(month)) - 6)
+	}
+	secs := o.Start.SecondOfDay() + shift*86400
+	t := fmt.Sprintf("M%d.%d.%d", month, week, (int(day.Day.Time())-shift+7)%7)
 	if secs != 7200 {
 		t += "/" + strconv.Itoa(secs/3600)
 		if secs%3600 != 0 {
@@ -308,8 +341,33 @@ func posixRule(o *Observance) (string, bool) {
 	return t, true
 }
 
-// posixName quotes a zone abbreviation for a POSIX TZ string.
+// sevenDays returns the first of days when they are 7 consecutive numbers.
+func sevenDays(days []int) (int, bool) {
+	if len(days) != 7 {
+		return 0, false
+	}
+	days = slices.Clone(days)
+	slices.Sort(days)
+	for i, d := range days {
+		if d != days[0]+i {
+			return 0, false
+		}
+	}
+	return days[0], true
+}
+
+// posixName quotes a zone abbreviation for a POSIX TZ string. It keeps the
+// name as it is, so a compiled zone keeps its abbreviations past its
+// explicit transitions, where the footer takes over. RFC 9636 allows only
+// 3 or more of A-Z, a-z, 0-9, "+" and "-" between the angle brackets, but
+// the time package, the only reader of the TZif data Compile builds,
+// takes anything up to the closing ">". A name with a ">" or a control
+// character, which would end the quote or the footer's line, is cut down
+// to the RFC's characters.
 func posixName(name string) string {
+	if !strings.ContainsFunc(name, func(r rune) bool { return r == '>' || r < ' ' || r == 0x7f }) {
+		return "<" + name + ">"
+	}
 	clean := strings.Map(func(r rune) rune {
 		if r >= 'A' && r <= 'Z' || r >= 'a' && r <= 'z' || r >= '0' && r <= '9' || r == '+' || r == '-' {
 			return r

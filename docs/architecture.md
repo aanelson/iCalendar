@@ -81,7 +81,8 @@ github.com/aanelson/iCalendar
 ├── civil              zone-less Date, Time, DateTime; RFC 5545 wall-clock → instant
 ├── contentline        RFC 5545 §3.1 content lines: unfold/fold, scan, write
 ├── recur              RRULE values, the recurrence engine, Set, Iterator, Cache
-├── tz                 TZID → *time.Location: VTIMEZONE compiler, IANA, Windows
+├── tz                 TZID → *time.Location: VTIMEZONE compiler, IANA, Windows;
+│                      *time.Location → VTIMEZONE
 │   └── internal/gen   generator for the CLDR Windows zone table
 ├── internal/icaltime  basic-format DATE / DATE-TIME text, shared by the above
 ├── docs/              this document, the API survey, the RFC texts
@@ -196,6 +197,7 @@ dec.Warn = func(err error) { … }   // each recovery, as a *SyntaxError
 dec.MaxLineLength, dec.MaxDepth    // defaults 1 MiB, 32
 cal, err := dec.Decode()           // io.EOF when no calendar is left
 cal, err := ical.Parse(r)          // exactly one VCALENDAR
+err = cal.AddTimezones(nil)        // before writing: a VTIMEZONE for each TZID used
 err = ical.NewEncoder(w).Encode(cal)
 b, err := cal.Bytes()
 ```
@@ -305,10 +307,81 @@ are cached by a hash of the definition's content, so one VTIMEZONE
 repeated across thousands of feeds compiles once. This also covers
 Outlook's `Customized Time Zone`, which exists nowhere else. A compiled
 US Eastern definition matches IANA `America/New_York` hour by hour over
-2007–2030 and 2195–2210.
+2007–2030 and 2195–2210. The footer also takes rules for a weekday on or
+after a given day (`BYDAY=FR;BYMONTHDAY=23,…,29`, or `BYYEARDAY` for a
+week that runs into the next month), written the way the IANA database
+writes them, as a weekday plus up to 167 hours (`M3.4.4/26`). Abbreviations
+go into the footer as they are, so a zone keeps its TZNAMEs past the
+explicit transitions; RFC 9636 would allow only 3 or more of `A-Za-z0-9+-`
+there, but the time package, the only reader of this TZif data, takes
+anything up to the closing `>`.
 
-Both caches are bounded LRUs over immutable values, and are the only
-process-wide state in the module.
+The three caches (`Load`'s, `Compile`'s and `DefinitionOf`'s) are bounded
+LRUs over immutable values, and are the only process-wide state in the
+module.
+
+**Writing a VTIMEZONE.** RFC 5545 requires a VTIMEZONE for every TZID a
+calendar uses (§3.6.5), valid "for all recurrence instances" of the
+components that use it. A producer that writes `DTSTART;TZID=America/Chicago`
+has a `*time.Location` and needs the VTIMEZONE text:
+
+```go
+def, err := tz.DefinitionOf(loc, from)  // the zone from `from` on, as STANDARD/DAYLIGHT observances
+z, err := ical.NewTimezone(def)         // a VTIMEZONE component: Timezone.Definition's inverse
+err = cal.AddTimezones(r)               // both, for each TZID the calendar uses and doesn't define
+```
+
+- `DefinitionOf` walks the zone's transitions from `from` to the end of
+  `tz.Horizon` (2200). Transitions that recur on one yearly rule become one
+  observance with an RRULE: the nth or last weekday of a month, a weekday on
+  or after a day (Israel's Friday on or after March 23; Egypt's Friday on or
+  after October 26, which can be November 1, needs `BYYEARDAY=-67,…,-61`),
+  a fixed date, or a day of the year. A rule the zone stopped following ends
+  with a UTC UNTIL equal to its last onset (§3.6.5); one it has followed for
+  at least 28 years (long enough for its dates to fall on every day of the
+  week, which tells apart rules that fit a few years alike) and still
+  follows at 2200 is open-ended, so readers extend it as far as recurrences
+  go. Other
+  transitions (Ramadan breaks, abolished DST) are listed by DTSTART and
+  RDATE. The rules in force at `from` are traced back to where they began,
+  so from any time since 2007 `America/New_York` is the two rules calendar
+  programs write, and the output doesn't change as a feed's earliest event
+  moves on. A zone with no transition before `from` gets one observance that
+  changes nothing, at 1970-01-01 (or `from`'s day, if earlier), so every
+  time from `from` on follows an onset.
+- DAYLIGHT is the higher offset of a change. The IANA database's negative
+  DST (Europe/Dublin's winter, in the main rather than rearguard data)
+  would otherwise make GMT the DAYLIGHT observance, and the same zone would
+  be written differently on hosts with different builds of the database.
+  A change is only read the other way round when the zone changes back
+  within two years, so leaving DST for good, for a new and higher standard
+  time, stays STANDARD.
+- The time package's `ZoneBounds` can't be followed blindly. Past a TZif
+  file's explicit transitions (2037 in "fat" files; sooner in "slim" ones),
+  where Go computes transitions from the POSIX footer, it reports the start
+  of every UTC year as a bound, and on December 31 of a leap year an end
+  that doesn't advance (it takes a year to be 365 days), so a naive walk
+  never ends. The walker steps over bounds where nothing changes and
+  replaces one that doesn't advance with a searched day's step.
+- `NewTimezone` writes DTSTART and RDATE as local times, then RRULE,
+  TZOFFSETFROM, TZOFFSETTO and TZNAME, the order of the RFC's examples. It
+  writes valid RFC 5545 for any definition it accepts: a rule that ends is
+  always written with a UTC UNTIL at its last onset, even when the
+  definition ends it with a COUNT or a floating or DATE UNTIL. It refuses
+  definitions no VTIMEZONE can hold (no TZID or observance, an offset of a
+  day or more, a rule that breaks §3.3.10).
+- `AddTimezones(r)` finds every TZID parameter in the calendar (outside its
+  VTIMEZONEs), resolves it with `r` (`tz.Load` when `r` is nil, so
+  `Eastern Standard Time` gets New York's rules under its own name), and
+  builds each zone from the earliest instant written with it. A producer
+  whose times were computed in locations `tz.Load` might not give back for
+  their names (from `time/tzdata`, or `time.LoadLocationFromTZData`)
+  passes a resolver returning them, so the VTIMEZONE agrees with the
+  times. The new VTIMEZONEs go before the other components, in TZID order.
+  A TZID it can't resolve is reported and doesn't stop the others.
+- Cost: about 0.3 ms per zone on an M-series Mac, most of it walking to
+  2200 (`BenchmarkDefinitionOf`), the first time; results are cached by
+  location and the onset of `from`'s period, and handed out as copies.
 
 ## Layer 4: recurrence (`recur`)
 
@@ -558,10 +631,11 @@ doesn't need it to round-trip, which is why it can come later.
 | Seek ≡ walk | `Between` vs. a full walk on 7,000+ windows, with and without a cache | pass |
 | Corpus | 2,139 `.ics` files from 9 projects and the RFC: no panic or hang; decode → encode → decode identical; valid folding; every event expands without panicking | 2,045 decode; the 94 rejected have no VCALENDAR (fragments, vCards, fuzz junk) or are truncated. 618 per-event expansion errors, all bad input: 512 events lack the DTSTART §3.6.1 requires, the rest are malformed values, unknown TZIDs with no VTIMEZONE, or RSCALE |
 | RFC examples | 222 property lines and 26 components from `examples.json` | pass |
-| RFC conformance | 134 tests in `conformance_*_test.go`, each case citing the RFC 5545 / 6868 sentence it checks, with expectations worked out from the RFC text rather than the code: content lines and framing, every value type, components, VTIMEZONE (the RFC's own zones, onset by onset), TZID resolution under three host zones, occurrences, RRULE grammar and every §3.3.10 MUST | pass; 131 skipped as `KNOWN GAP`, almost all §3.6/§3.8 property rules that only the planned schema validation will report |
+| RFC conformance | 143 tests in `conformance_*_test.go`, each case citing the RFC 5545 / 6868 sentence it checks, with expectations worked out from the RFC text rather than the code: content lines and framing, every value type, components, VTIMEZONE (the RFC's own zones, onset by onset), VTIMEZONEs this library writes, TZID resolution under three host zones, occurrences, RRULE grammar and every §3.3.10 MUST | pass; 131 skipped as `KNOWN GAP`, almost all §3.6/§3.8 property rules that only the planned schema validation will report |
 | Independent RRULE reference | A naive §3.3.10 implementation sharing no code with `recur`, differentially tested against `Set.Between`, `Rule.Between` (seeking, with and without a cache) and zoned `Set.Times` near real DST changes | 3,000 rules + 1,000 zoned sets per run (`-short`: a tenth); 300,000 + 100,000 with `-recur.conformance=300000`: no mismatches |
 | recurring-ical-events | 11 calendar-level occurrence expectations (overrides, SEQUENCE, EXDATE) | 11 / 11 |
 | VTIMEZONE | compiled zones vs. IANA, hour by hour | pass |
+| VTIMEZONE writing | `DefinitionOf` → `Compile` against the source zone at every change of either (and densely around each, and weekly) from 1800, 1900, 1970, a transition instant, 2026 and 2150 to 2400, for 19 zones chosen for their history; every zone in the host's zoneinfo from 1960 and 2026; the written text read back strictly and checked against §3.6.5's MUSTs, with offsets worked out by §3.6.5's own "last onset before the time" rule, without `Compile`; a weekly event in Chicago keeps its local time to 2060 | pass; mutations of the onset clock or UNTIL are caught |
 | Fuzzing | `FuzzReader`, `FuzzDecode`, `FuzzRule` | clean (4 min each: 15M, 13M, 19M executions) |
 | Independent review | A second pass over the engine and expander, with a 40,000-rule randomized differential run, found 9 bugs (DST-gap ordering, instants vs. wall clock for RDATE/EXDATE, an all-day window edge, EXRULE counting, a slow-to-prove empty BYSETPOS, …) | all fixed, each with a regression test |
 | Hostile input | 1 MiB parameter, 5 MiB of parameters, 1M comma values | linear |
@@ -584,8 +658,10 @@ the scripts that built them are in `testdata/thirdparty/tools`.
 3. **Schema and validation**: per-property value types and cardinality
    for RFC 5545, `Validate` on the model, strict-mode checks such as
    UNTIL's form against DTSTART's (erratum 4414).
-4. **Time zones, part 2**: a Windows *display name* table
-   (`(UTC-05:00) Eastern Time (US & Canada)`) from sabre/vobject's data.
+4. **Time zones, part 2**: writing a VTIMEZONE from a `*time.Location`
+   (done: `tz.DefinitionOf`, `ical.NewTimezone`, `Calendar.AddTimezones`);
+   a Windows *display name* table (`(UTC-05:00) Eastern Time (US &
+   Canada)`) from sabre/vobject's data.
 5. **Extensions**: RFC 7986, 9073/9074, 7529 (RSCALE, against libical's
    vectors), then jCal/xCal and iTIP helpers.
 

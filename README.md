@@ -62,6 +62,10 @@ This library:
   output that can't inject lines.
 - **Compiles VTIMEZONE into a real `*time.Location`**, so Outlook's
   custom zones work; maps Windows zone names through CLDR; never guesses.
+  And the reverse: `cal.AddTimezones(nil)` writes the VTIMEZONE RFC 5545
+  requires for each TZID a calendar uses, from the Go zone, so a
+  recurring event written in local time stays at that local time across
+  DST changes.
 - **Round-trips losslessly:** unknown properties, parameters and
   components survive, in order.
 
@@ -82,7 +86,7 @@ Not done yet (see the [roadmap](docs/architecture.md#roadmap)):
 |---|---|
 | [`ical`](.) | Model, `Decoder`/`Encoder`, value codecs, typed views (`Event`, `Todo`, …), `Expander` |
 | [`recur`](recur) | `Rule` (RRULE), the expansion engine, `Set`, `Iterator`, `Cache` |
-| [`tz`](tz) | TZID resolution: VTIMEZONE compiler, IANA and Windows names |
+| [`tz`](tz) | TZID resolution: VTIMEZONE compiler, IANA and Windows names; `*time.Location` → VTIMEZONE |
 | [`civil`](civil) | Zone-less dates and times; RFC 5545 wall-clock → instant |
 | [`contentline`](contentline) | The content-line layer (folding, parameters, RFC 6868) |
 
