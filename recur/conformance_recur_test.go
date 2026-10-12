@@ -138,15 +138,15 @@ func TestConformanceParseGrammar(t *testing.T) {
 
 		// "The FREQ rule part is REQUIRED, but MUST NOT occur more than
 		// once." "The other rule parts are OPTIONAL, but MUST NOT occur
-		// more than once."
+		// more than once." A part given again with the same value is a
+		// documented choice, below.
 		{"COUNT=3", false},
 		{"", false},
-		{"FREQ=DAILY;FREQ=DAILY", false},
 		{"FREQ=DAILY;FREQ=WEEKLY", false},
 		{"FREQ=DAILY;BYDAY=MO;BYDAY=TU", false},
-		{"FREQ=DAILY;COUNT=2;COUNT=2", false},
-		{"FREQ=DAILY;INTERVAL=2;INTERVAL=2", false},
-		{"FREQ=DAILY;WKST=MO;WKST=MO", false},
+		{"FREQ=DAILY;COUNT=2;COUNT=3", false},
+		{"FREQ=DAILY;INTERVAL=2;INTERVAL=3", false},
+		{"FREQ=DAILY;WKST=MO;WKST=SU", false},
 
 		// "Compliant applications MUST accept rule parts ordered in any
 		// sequence".
@@ -161,8 +161,9 @@ func TestConformanceParseGrammar(t *testing.T) {
 }
 
 // Leniencies the architecture doc settles, outside the grammar: a 0MO entry
-// (ordwk is 1 to 53) and COUNT=0 or INTERVAL=0 (INTERVAL "contains a
-// positive integer"; COUNT=0 contradicts DTSTART always counting).
+// (ordwk is 1 to 53), COUNT=0 or INTERVAL=0 (INTERVAL "contains a positive
+// integer"; COUNT=0 contradicts DTSTART always counting), and the parts
+// that can't change a rule's meaning.
 func TestConformanceParseDocumentedChoices(t *testing.T) {
 	for _, c := range []struct {
 		in   string
@@ -179,6 +180,18 @@ func TestConformanceParseDocumentedChoices(t *testing.T) {
 		// whole rule.
 		{"FREQ=MINUTELY;BYSECOND=005", true, "ParseRule doc: leading zeros are read"},
 		{"FREQ=YEARLY;BYYEARDAY=0001", true, "ParseRule doc: leading zeros are read"},
+		// Outside the grammar, but meaning nothing more than the rest of
+		// the rule, so ignored rather than losing the whole rule.
+		{"FREQ=DAILY;FREQ=DAILY", true, "ParseRule doc: a part given again with the same value is read once"},
+		{"FREQ=DAILY;COUNT=2;COUNT=02", true, "ParseRule doc: a part given again with the same value is read once"},
+		{"FREQ=WEEKLY;BYDAY=MO,TU;BYDAY=TU,MO", true, "ParseRule doc: lists are compared as sets, as expansion reads them"},
+		{"FREQ=DAILY;X-FOO=1", true, "ParseRule doc: an x-name part is ignored"},
+		{"FREQ=DAILY;X-VND-FOO=1;X-VND-FOO=2", true, "ParseRule doc: an x-name part is ignored"},
+		{"FREQ=DAILY;X-=1", false, "x-name needs a name after X-"},
+		{"RSCALE=GREGORIAN;FREQ=MONTHLY;SKIP=OMIT", true, "RFC 7529: SKIP=OMIT \"corresponds to the existing iCalendar behavior\""},
+		{"FREQ=MONTHLY;rscale=gregorian", true, "RFC 7529: RSCALE \"Names are case insensitive\""},
+		{"RSCALE=HEBREW;FREQ=YEARLY", false, "another calendar changes the dates"},
+		{"RSCALE=GREGORIAN;FREQ=MONTHLY;SKIP=FORWARD", false, "SKIP=FORWARD adds dates OMIT drops"},
 	} {
 		_, err := recur.ParseRule(c.in)
 		if (err == nil) != c.ok {

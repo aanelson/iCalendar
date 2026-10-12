@@ -332,8 +332,19 @@ rule.Validate()   // §3.3.10's MUST / MUST NOT between parts
 `recur.Weekday` counts from Monday so its zero value is the RFC's default
 WKST; `Time()` and `WeekdayOf` convert to and from `time.Weekday`.
 `ParseRule` reads names and values case-insensitively and ignores an empty
-part, but refuses unknown or repeated parts, out-of-range values, and a
-COUNT or INTERVAL below 1 (which rrule-go reads as "endless" and "1").
+part. So a producer's slip doesn't cost the whole rule, it also reads and
+sets aside a part given again with the same value (lists compared as sets),
+RFC 7529's `RSCALE=GREGORIAN` and `SKIP=OMIT` (which together are RFC
+5545's own recurrence), and an x-name part (RFC 2445 allowed them), whose
+meaning it doesn't know, so it skips it as any reader that doesn't know it
+would. None of them is silent: each is kept, as written, in `Rule.Ignored`,
+which `String` doesn't write, so a strict caller can refuse the rule and a
+writer can see what it leaves out. It refuses any other unknown part (a
+misspelt `BYDAYS` would otherwise change the dates silently), a part
+repeated with a different value, another RSCALE or SKIP, out-of-range
+values, and a COUNT or INTERVAL below 1 (which rrule-go reads as "endless"
+and "1"). A repeat is compared against the first value kept as a sorted
+set, so parsing stays O(n log n) however the parts repeat.
 
 ### Expansion API
 
@@ -539,7 +550,7 @@ for occ, err := range cal.Occurrences(from, to) { … } // the zero Expander
 | New properties, parameters | RFC 7986 COLOR, IMAGE, CONFERENCE; RFC 9073 STRUCTURED-DATA | Raw values already round-trip; a package adds typed accessors and *(planned)* schema entries |
 | New components | RFC 7953 VAVAILABILITY; RFC 9073 VLOCATION, VRESOURCE; RFC 9074 VALARM extensions | Generic `Component`; a package adds a typed view |
 | Changed encodings | RFC 6868 | Done, in `contentline` |
-| Recurrence extensions | RFC 7529 RSCALE, SKIP, leap months | `Rule` gains `RScale`/`Skip`; the per-year masks come from a calendar-system interface with Gregorian built in. 34 libical RSCALE vectors are waiting |
+| Recurrence extensions | RFC 7529 RSCALE, SKIP, leap months | `Rule` gains `RScale`/`Skip`; the per-year masks come from a calendar-system interface with Gregorian built in. `RSCALE=GREGORIAN` with `SKIP=OMIT` is read already; 33 libical RSCALE vectors are waiting |
 | Other representations | RFC 7265 jCal, RFC 6321 xCal | New codecs over the same tree (`ical/jcal`) |
 | Protocol semantics | RFC 5546 iTIP | Validators and helpers over the model |
 
@@ -554,7 +565,7 @@ doesn't need it to round-trip, which is why it can come later.
 | Suite | What it checks | Status |
 |---|---|---|
 | RFC recurrence examples | All 43 §3.8.5.3 cases, independently brute-force checked when transcribed | 43 / 43 |
-| Third-party recurrence vectors | 1,217 from dateutil, libical, ical.js, ical.net, sabre/vobject, rrule.js, rust-rrule | 992 match; 28 documented differences; 197 skipped: 73 use extensions (BYEASTER, RSCALE, SKIP), 124 combine parts RFC 5545 forbids |
+| Third-party recurrence vectors | 1,217 from dateutil, libical, ical.js, ical.net, sabre/vobject, rrule.js, rust-rrule | 993 match; 28 documented differences; 196 skipped: 72 use extensions (BYEASTER, RSCALE other than GREGORIAN, SKIP other than OMIT), 124 combine parts RFC 5545 forbids |
 | Seek ≡ walk | `Between` vs. a full walk on 7,000+ windows, with and without a cache | pass |
 | Corpus | 2,139 `.ics` files from 9 projects and the RFC: no panic or hang; decode → encode → decode identical; valid folding; every event expands without panicking | 2,045 decode; the 94 rejected have no VCALENDAR (fragments, vCards, fuzz junk) or are truncated. 618 per-event expansion errors, all bad input: 512 events lack the DTSTART §3.6.1 requires, the rest are malformed values, unknown TZIDs with no VTIMEZONE, or RSCALE |
 | RFC examples | 222 property lines and 26 components from `examples.json` | pass |
@@ -594,11 +605,6 @@ the scripts that built them are in `testdata/thirdparty/tools`.
 From the [API survey](api-survey.md)'s recommendations, where this design
 differs or hasn't decided yet:
 
-- **Unknown RRULE parts.** `ParseRule` rejects them (as dateutil and
-  vobject do); python-icalendar and ical4j keep them. The raw property
-  already round-trips, so this only affects expansion. Accepting
-  `RSCALE=GREGORIAN` (equivalent to RFC 5545) would be an easy first step
-  toward RFC 7529.
 - **TZID precedence.** The calendar's VTIMEZONE wins, as RFC 5545 and
   libical/ical.js have it. python-icalendar and ical.net prefer IANA for
   names IANA knows, which protects against truncated VTIMEZONEs. Make it an

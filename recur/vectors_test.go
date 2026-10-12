@@ -74,7 +74,10 @@ func TestVectors(t *testing.T) {
 			var pass, fail, skipped, expectedFail int
 			for _, v := range f.Cases {
 				ok := t.Run(v.ID, func(t *testing.T) {
-					if len(v.Extensions) > 0 {
+					// RFC 7529 that ParseRule reads as RFC 5545 itself
+					// (RSCALE=GREGORIAN, SKIP=OMIT) runs; every other
+					// extension is skipped.
+					if len(v.Extensions) > 0 && !(onlyRScale(v.Extensions) && parsesAll(v.RRule, v.ExRule)) {
 						skipped++
 						t.Skipf("uses %v, beyond RFC 5545", v.Extensions)
 					}
@@ -108,6 +111,26 @@ func TestVectors(t *testing.T) {
 			_ = pass
 		})
 	}
+}
+
+func onlyRScale(extensions []string) bool {
+	for _, e := range extensions {
+		if e != "RSCALE" && e != "SKIP" {
+			return false
+		}
+	}
+	return true
+}
+
+func parsesAll(lists ...[]string) bool {
+	for _, list := range lists {
+		for _, s := range list {
+			if _, err := ParseRule(s); err != nil {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // expandVector computes a vector's instances, formatted as its expected

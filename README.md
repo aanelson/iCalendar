@@ -53,7 +53,7 @@ This library:
   conformance tests check RFC sentences one by one, with expectations
   worked out from the RFC rather than the code. An independent, naive
   implementation of §3.3.10 agrees with the engine on 300,000 random
-  rules. All 43 RFC recurrence examples pass, and 992 vectors from seven
+  rules. All 43 RFC recurrence examples pass, and 993 vectors from seven
   other libraries' test suites match; the 28 deliberate differences are
   documented.
 - **Is safe on untrusted feeds.** Linear-time parsing, fuzzed; a truncated

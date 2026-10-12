@@ -731,7 +731,10 @@ func (p *Property) Recur() (recur.Rule, error) {
 	return r, nil
 }
 
-// SetRecur sets the value to r.
+// SetRecur sets the value to r, written as RFC 5545 has it. The parts in
+// r.Ignored (x-name parts, RSCALE=GREGORIAN, a repeated part) are left out,
+// so a rule read with Recur and set back loses them; a caller that wants
+// them keeps the Property's own Value.
 func (p *Property) SetRecur(r recur.Rule) {
 	p.Value = r.String()
 }
