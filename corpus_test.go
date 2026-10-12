@@ -198,7 +198,8 @@ func TestRFC5545Examples(t *testing.T) {
 		}
 		switch ex.Kind {
 		case "property", "parameter":
-			r := contentline.NewReader(strings.NewReader(ex.Text))
+			// The RFC prints each line without its CRLF.
+			r := contentline.NewReader(strings.NewReader(ex.Text + "\r\n"))
 			r.Strict = true
 			for {
 				_, err := r.ReadLine()

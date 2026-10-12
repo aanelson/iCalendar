@@ -189,6 +189,9 @@ func (r *Reader) physical() ([]byte, error) {
 				if len(line) > r.maxLine() {
 					return nil, r.tooLong(r.pos + 1)
 				}
+				if r.Strict {
+					return nil, &SyntaxError{Line: r.pos + 1, Msg: "last line doesn't end in CRLF"}
+				}
 				r.r = r.w
 				r.pos++
 				return line, nil

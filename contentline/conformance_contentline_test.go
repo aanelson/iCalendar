@@ -407,9 +407,6 @@ func TestConformanceLineBreaks(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name+"/strict", func(t *testing.T) {
-			if tt.name == "no final CRLF" {
-				t.Skip("KNOWN GAP: strict mode accepts a last line with no CRLF; requiring it would break TestRFC5545Examples, which reads the CRLF-less examples.json texts strictly")
-			}
 			if res := readString(tt.in, true); res.err == nil {
 				t.Errorf("strict read of %q succeeded: %s", tt.in, showLines(res.lines))
 			}
