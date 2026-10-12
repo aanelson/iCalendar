@@ -1,0 +1,3868 @@
+{
+ "source": "rust-rrule",
+ "upstream": "https://github.com/fmeringdal/rust-rrule",
+ "commit": "1c3420ede20e6190040804121e1b5e1eddac6493",
+ "license": "MIT OR Apache-2.0",
+ "path": "rrule/src/tests/{rfc_tests,regression,daylight_saving,rrule}.rs",
+ "semantics": "rust-rrule (a Rust port of python-dateutil's rrule). Two test styles are converted: (1) string tests (rfc_tests.rs, regression.rs, daylight_saving.rs): \"DTSTART...\\nRRULE...\".parse::<RRuleSet>() then .all(N) (at most N instances; u16::MAX = effectively all) or .all_unchecked(), compared with common::check_occurrences(&dates, &[RFC 3339 strings]); the RFC 3339 values are converted to wall-clock basic form in the DTSTART zone (tzid) - the UTC offsets in the source are consistent with that zone. (2) struct tests (rrule.rs): RRule { freq, count, interval, until, week_start, by_* .. } + test_recurring_rrule(rrule, limited, dt_start, &[expected]) where dt_start/expected are ymd_hms(...) in UTC (written with a Z suffix); the struct fields were mapped to RRULE text (by_n_month_day merged into BYMONTHDAY; NWeekday::Nth(n, D) -> nDD); the explicit by_hour/by_minute/by_second/by_month/by_month_day values that the tests copy from dt_start are kept verbatim. As in dateutil, DTSTART is NOT emitted unless it matches the rule (include_dtstart=false). 'limit' = N for .all(N) with N != u16::MAX. Tests gated by #[cfg(feature = \"by-easter\")] carry extensions [\"BYEASTER\"]. Tests that build rules with the builder API, use RRuleSet builders (rruleset.rs), assert something other than the instance list, or are not mechanically extractable were skipped.",
+ "cases": [
+  {
+   "id": "rust-rrule-0001",
+   "name": "rfc_tests::daily_10_occurrences",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=DAILY;COUNT=10"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000",
+    "19970903T090000",
+    "19970904T090000",
+    "19970905T090000",
+    "19970906T090000",
+    "19970907T090000",
+    "19970908T090000",
+    "19970909T090000",
+    "19970910T090000",
+    "19970911T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:11"
+  },
+  {
+   "id": "rust-rrule-0002",
+   "name": "rfc_tests::daily_until_november",
+   "dtstart": "19970920T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=DAILY;UNTIL=19971103T000000Z"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970920T090000",
+    "19970921T090000",
+    "19970922T090000",
+    "19970923T090000",
+    "19970924T090000",
+    "19970925T090000",
+    "19970926T090000",
+    "19970927T090000",
+    "19970928T090000",
+    "19970929T090000",
+    "19970930T090000",
+    "19971001T090000",
+    "19971002T090000",
+    "19971003T090000",
+    "19971004T090000",
+    "19971005T090000",
+    "19971006T090000",
+    "19971007T090000",
+    "19971008T090000",
+    "19971009T090000",
+    "19971010T090000",
+    "19971011T090000",
+    "19971012T090000",
+    "19971013T090000",
+    "19971014T090000",
+    "19971015T090000",
+    "19971016T090000",
+    "19971017T090000",
+    "19971018T090000",
+    "19971019T090000",
+    "19971020T090000",
+    "19971021T090000",
+    "19971022T090000",
+    "19971023T090000",
+    "19971024T090000",
+    "19971025T090000",
+    "19971026T090000",
+    "19971027T090000",
+    "19971028T090000",
+    "19971029T090000",
+    "19971030T090000",
+    "19971031T090000",
+    "19971101T090000",
+    "19971102T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:37"
+  },
+  {
+   "id": "rust-rrule-0003",
+   "name": "rfc_tests::every_other_day",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=2"
+   ],
+   "include_dtstart": false,
+   "limit": 32,
+   "expected": [
+    "19970902T090000",
+    "19970904T090000",
+    "19970906T090000",
+    "19970908T090000",
+    "19970910T090000",
+    "19970912T090000",
+    "19970914T090000",
+    "19970916T090000",
+    "19970918T090000",
+    "19970920T090000",
+    "19970922T090000",
+    "19970924T090000",
+    "19970926T090000",
+    "19970928T090000",
+    "19970930T090000",
+    "19971002T090000",
+    "19971004T090000",
+    "19971006T090000",
+    "19971008T090000",
+    "19971010T090000",
+    "19971012T090000",
+    "19971014T090000",
+    "19971016T090000",
+    "19971018T090000",
+    "19971020T090000",
+    "19971022T090000",
+    "19971024T090000",
+    "19971026T090000",
+    "19971028T090000",
+    "19971030T090000",
+    "19971101T090000",
+    "19971103T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:103"
+  },
+  {
+   "id": "rust-rrule-0004",
+   "name": "rfc_tests::every_10_days_5_occurrences",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=10;COUNT=5"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000",
+    "19970912T090000",
+    "19970922T090000",
+    "19971002T090000",
+    "19971012T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:151"
+  },
+  {
+   "id": "rust-rrule-0005",
+   "name": "rfc_tests::weekly_10_occurrences",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=10"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000",
+    "19970909T090000",
+    "19970916T090000",
+    "19970923T090000",
+    "19970930T090000",
+    "19971007T090000",
+    "19971014T090000",
+    "19971021T090000",
+    "19971028T090000",
+    "19971104T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:200"
+  },
+  {
+   "id": "rust-rrule-0006",
+   "name": "rfc_tests::weekly_until_november",
+   "dtstart": "19970923T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=WEEKLY;UNTIL=19971105T000000Z"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970923T090000",
+    "19970930T090000",
+    "19971007T090000",
+    "19971014T090000",
+    "19971021T090000",
+    "19971028T090000",
+    "19971104T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:226"
+  },
+  {
+   "id": "rust-rrule-0007",
+   "name": "rfc_tests::every_other_week",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;WKST=SU"
+   ],
+   "include_dtstart": false,
+   "limit": 13,
+   "expected": [
+    "19970902T090000",
+    "19970916T090000",
+    "19970930T090000",
+    "19971014T090000",
+    "19971028T090000",
+    "19971111T090000",
+    "19971125T090000",
+    "19971209T090000",
+    "19971223T090000",
+    "19980106T090000",
+    "19980120T090000",
+    "19980203T090000",
+    "19980217T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:255"
+  },
+  {
+   "id": "rust-rrule-0008",
+   "name": "rfc_tests::every_other_week_some_days_until_dec",
+   "dtstart": "19970901T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970901T090000",
+    "19970903T090000",
+    "19970905T090000",
+    "19970915T090000",
+    "19970917T090000",
+    "19970919T090000",
+    "19970929T090000",
+    "19971001T090000",
+    "19971003T090000",
+    "19971013T090000",
+    "19971015T090000",
+    "19971017T090000",
+    "19971027T090000",
+    "19971029T090000",
+    "19971031T090000",
+    "19971110T090000",
+    "19971112T090000",
+    "19971114T090000",
+    "19971124T090000",
+    "19971126T090000",
+    "19971128T090000",
+    "19971208T090000",
+    "19971210T090000",
+    "19971212T090000",
+    "19971222T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:316"
+  },
+  {
+   "id": "rust-rrule-0009",
+   "name": "rfc_tests::every_other_week_some_days_8_occurrences",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000",
+    "19970904T090000",
+    "19970916T090000",
+    "19970918T090000",
+    "19970930T090000",
+    "19971002T090000",
+    "19971014T090000",
+    "19971016T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:357"
+  },
+  {
+   "id": "rust-rrule-0010",
+   "name": "rfc_tests::monthly_on_first_friday_10_occurrences",
+   "dtstart": "19970905T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=10;BYDAY=1FR"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970905T090000",
+    "19971003T090000",
+    "19971107T090000",
+    "19971205T090000",
+    "19980102T090000",
+    "19980206T090000",
+    "19980306T090000",
+    "19980403T090000",
+    "19980501T090000",
+    "19980605T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:383"
+  },
+  {
+   "id": "rust-rrule-0011",
+   "name": "rfc_tests::monthly_on_first_friday_until_dec",
+   "dtstart": "19970905T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;UNTIL=19971224T000000Z;BYDAY=1FR"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970905T090000",
+    "19971003T090000",
+    "19971107T090000",
+    "19971205T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:409"
+  },
+  {
+   "id": "rust-rrule-0012",
+   "name": "rfc_tests::every_other_month_on_first_and_last_sunday_10_occurrences",
+   "dtstart": "19970907T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=2;COUNT=10;BYDAY=1SU,-1SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970907T090000",
+    "19970928T090000",
+    "19971102T090000",
+    "19971130T090000",
+    "19980104T090000",
+    "19980125T090000",
+    "19980301T090000",
+    "19980329T090000",
+    "19980503T090000",
+    "19980531T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:429"
+  },
+  {
+   "id": "rust-rrule-0013",
+   "name": "rfc_tests::monthly_on_second_to_last_monday_for_6_months",
+   "dtstart": "19970922T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=6;BYDAY=-2MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970922T090000",
+    "19971020T090000",
+    "19971117T090000",
+    "19971222T090000",
+    "19980119T090000",
+    "19980216T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:455"
+  },
+  {
+   "id": "rust-rrule-0014",
+   "name": "rfc_tests::monthly_on_third_to_last_day_forever",
+   "dtstart": "19970928T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;BYMONTHDAY=-3"
+   ],
+   "include_dtstart": false,
+   "limit": 6,
+   "expected": [
+    "19970928T090000",
+    "19971029T090000",
+    "19971128T090000",
+    "19971229T090000",
+    "19980129T090000",
+    "19980226T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:477"
+  },
+  {
+   "id": "rust-rrule-0015",
+   "name": "rfc_tests::monthly_on_2nd_and_15th_10_occurrences",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000",
+    "19970915T090000",
+    "19971002T090000",
+    "19971015T090000",
+    "19971102T090000",
+    "19971115T090000",
+    "19971202T090000",
+    "19971215T090000",
+    "19980102T090000",
+    "19980115T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:499"
+  },
+  {
+   "id": "rust-rrule-0016",
+   "name": "rfc_tests::monthly_on_first_and_last_day_10_occurrences",
+   "dtstart": "19970930T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=10;BYMONTHDAY=1,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970930T090000",
+    "19971001T090000",
+    "19971031T090000",
+    "19971101T090000",
+    "19971130T090000",
+    "19971201T090000",
+    "19971231T090000",
+    "19980101T090000",
+    "19980131T090000",
+    "19980201T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:525"
+  },
+  {
+   "id": "rust-rrule-0017",
+   "name": "rfc_tests::every_18_months_10th_to_15th_10_occurrences",
+   "dtstart": "19970910T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=18;COUNT=10;BYMONTHDAY=10,11,12,13,14,15"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970910T090000",
+    "19970911T090000",
+    "19970912T090000",
+    "19970913T090000",
+    "19970914T090000",
+    "19970915T090000",
+    "19990310T090000",
+    "19990311T090000",
+    "19990312T090000",
+    "19990313T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:551"
+  },
+  {
+   "id": "rust-rrule-0018",
+   "name": "rfc_tests::every_tuesday_every_other_month",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=2;BYDAY=TU"
+   ],
+   "include_dtstart": false,
+   "limit": 18,
+   "expected": [
+    "19970902T090000",
+    "19970909T090000",
+    "19970916T090000",
+    "19970923T090000",
+    "19970930T090000",
+    "19971104T090000",
+    "19971111T090000",
+    "19971118T090000",
+    "19971125T090000",
+    "19980106T090000",
+    "19980113T090000",
+    "19980120T090000",
+    "19980127T090000",
+    "19980303T090000",
+    "19980310T090000",
+    "19980317T090000",
+    "19980324T090000",
+    "19980331T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:577"
+  },
+  {
+   "id": "rust-rrule-0019",
+   "name": "rfc_tests::yearly_in_june_and_july_for_10_occurrences",
+   "dtstart": "19970610T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=10;BYMONTH=6,7"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970610T090000",
+    "19970710T090000",
+    "19980610T090000",
+    "19980710T090000",
+    "19990610T090000",
+    "19990710T090000",
+    "20000610T090000",
+    "20000710T090000",
+    "20010610T090000",
+    "20010710T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:616"
+  },
+  {
+   "id": "rust-rrule-0020",
+   "name": "rfc_tests::every_other_year_on_jan_feb_and_march_for_10_occurrences",
+   "dtstart": "19970310T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=2;COUNT=10;BYMONTH=1,2,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970310T090000",
+    "19990110T090000",
+    "19990210T090000",
+    "19990310T090000",
+    "20010110T090000",
+    "20010210T090000",
+    "20010310T090000",
+    "20030110T090000",
+    "20030210T090000",
+    "20030310T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:642"
+  },
+  {
+   "id": "rust-rrule-0021",
+   "name": "rfc_tests::every_third_year_on_1st_100th_and_200th_day_for_10_occurrences",
+   "dtstart": "19970101T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=3;COUNT=10;BYYEARDAY=1,100,200"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970101T090000",
+    "19970410T090000",
+    "19970719T090000",
+    "20000101T090000",
+    "20000409T090000",
+    "20000718T090000",
+    "20030101T090000",
+    "20030410T090000",
+    "20030719T090000",
+    "20060101T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:668"
+  },
+  {
+   "id": "rust-rrule-0022",
+   "name": "rfc_tests::every_20th_monday_of_year_forever",
+   "dtstart": "19970519T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=YEARLY;BYDAY=20MO"
+   ],
+   "include_dtstart": false,
+   "limit": 3,
+   "expected": [
+    "19970519T090000",
+    "19980518T090000",
+    "19990517T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:694"
+  },
+  {
+   "id": "rust-rrule-0023",
+   "name": "rfc_tests::monday_of_week_20_forever",
+   "dtstart": "19970512T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO"
+   ],
+   "include_dtstart": false,
+   "limit": 3,
+   "expected": [
+    "19970512T090000",
+    "19980511T090000",
+    "19990517T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:713"
+  },
+  {
+   "id": "rust-rrule-0024",
+   "name": "rfc_tests::every_thursday_in_march_forever",
+   "dtstart": "19970313T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=YEARLY;BYMONTH=3;BYDAY=TH"
+   ],
+   "include_dtstart": false,
+   "limit": 11,
+   "expected": [
+    "19970313T090000",
+    "19970320T090000",
+    "19970327T090000",
+    "19980305T090000",
+    "19980312T090000",
+    "19980319T090000",
+    "19980326T090000",
+    "19990304T090000",
+    "19990311T090000",
+    "19990318T090000",
+    "19990325T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:732"
+  },
+  {
+   "id": "rust-rrule-0025",
+   "name": "rfc_tests::every_thursday_only_during_june_july_and_august_forever",
+   "dtstart": "19970605T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=YEARLY;BYDAY=TH;BYMONTH=6,7,8"
+   ],
+   "include_dtstart": false,
+   "limit": 39,
+   "expected": [
+    "19970605T090000",
+    "19970612T090000",
+    "19970619T090000",
+    "19970626T090000",
+    "19970703T090000",
+    "19970710T090000",
+    "19970717T090000",
+    "19970724T090000",
+    "19970731T090000",
+    "19970807T090000",
+    "19970814T090000",
+    "19970821T090000",
+    "19970828T090000",
+    "19980604T090000",
+    "19980611T090000",
+    "19980618T090000",
+    "19980625T090000",
+    "19980702T090000",
+    "19980709T090000",
+    "19980716T090000",
+    "19980723T090000",
+    "19980730T090000",
+    "19980806T090000",
+    "19980813T090000",
+    "19980820T090000",
+    "19980827T090000",
+    "19990603T090000",
+    "19990610T090000",
+    "19990617T090000",
+    "19990624T090000",
+    "19990701T090000",
+    "19990708T090000",
+    "19990715T090000",
+    "19990722T090000",
+    "19990729T090000",
+    "19990805T090000",
+    "19990812T090000",
+    "19990819T090000",
+    "19990826T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:759"
+  },
+  {
+   "id": "rust-rrule-0026",
+   "name": "rfc_tests::every_friday_the_13th_forever",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13"
+   ],
+   "exdate": [
+    "19970902T090000"
+   ],
+   "include_dtstart": false,
+   "limit": 5,
+   "expected": [
+    "19980213T090000",
+    "19980313T090000",
+    "19981113T090000",
+    "19990813T090000",
+    "20001013T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:814"
+  },
+  {
+   "id": "rust-rrule-0027",
+   "name": "rfc_tests::first_sat_follows_first_sunday_of_month_forever",
+   "dtstart": "19970913T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13"
+   ],
+   "include_dtstart": false,
+   "limit": 10,
+   "expected": [
+    "19970913T090000",
+    "19971011T090000",
+    "19971108T090000",
+    "19971213T090000",
+    "19980110T090000",
+    "19980207T090000",
+    "19980307T090000",
+    "19980411T090000",
+    "19980509T090000",
+    "19980613T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:836"
+  },
+  {
+   "id": "rust-rrule-0028",
+   "name": "rfc_tests::every_4_years_us_presidential_election_day_forever",
+   "dtstart": "19961105T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8"
+   ],
+   "include_dtstart": false,
+   "limit": 3,
+   "expected": [
+    "19961105T090000",
+    "20001107T090000",
+    "20041102T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:863"
+  },
+  {
+   "id": "rust-rrule-0029",
+   "name": "rfc_tests::every_third_instance_of_weekday_in_month_for_3_months",
+   "dtstart": "19970904T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970904T090000",
+    "19971007T090000",
+    "19971106T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:883"
+  },
+  {
+   "id": "rust-rrule-0030",
+   "name": "rfc_tests::second_to_last_weekday_of_month",
+   "dtstart": "19970929T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2"
+   ],
+   "include_dtstart": false,
+   "limit": 7,
+   "expected": [
+    "19970929T090000",
+    "19971030T090000",
+    "19971127T090000",
+    "19971230T090000",
+    "19980129T090000",
+    "19980226T090000",
+    "19980330T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:902"
+  },
+  {
+   "id": "rust-rrule-0031",
+   "name": "rfc_tests::every_3_hours_on_specific_day",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=3;UNTIL=19970902T210000Z"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000",
+    "19970902T120000",
+    "19970902T150000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:925"
+  },
+  {
+   "id": "rust-rrule-0032",
+   "name": "rfc_tests::every_15_min_for_6_occurrences",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MINUTELY;INTERVAL=15;COUNT=6"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000",
+    "19970902T091500",
+    "19970902T093000",
+    "19970902T094500",
+    "19970902T100000",
+    "19970902T101500"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:945"
+  },
+  {
+   "id": "rust-rrule-0033",
+   "name": "rfc_tests::every_hour_and_a_half_for_4_occurrences",
+   "dtstart": "19970902T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MINUTELY;INTERVAL=90;COUNT=4"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000",
+    "19970902T103000",
+    "19970902T120000",
+    "19970902T133000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:967"
+  },
+  {
+   "id": "rust-rrule-0034",
+   "name": "rfc_tests::week_day_start_monday_generated_days",
+   "dtstart": "19970805T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970805T090000",
+    "19970810T090000",
+    "19970819T090000",
+    "19970824T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:1036"
+  },
+  {
+   "id": "rust-rrule-0035",
+   "name": "rfc_tests::week_day_start_sunday_generated_days",
+   "dtstart": "19970805T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970805T090000",
+    "19970817T090000",
+    "19970819T090000",
+    "19970831T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:1056"
+  },
+  {
+   "id": "rust-rrule-0036",
+   "name": "rfc_tests::invalid_date_is_ignored",
+   "dtstart": "20070115T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "20070115T090000",
+    "20070130T090000",
+    "20070215T090000",
+    "20070315T090000",
+    "20070330T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rfc_tests.rs:1076"
+  },
+  {
+   "id": "rust-rrule-0037",
+   "name": "regression::issue_34",
+   "dtstart": "19970929T090000",
+   "tzid": "America/New_York",
+   "rrule": [
+    "FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2"
+   ],
+   "include_dtstart": false,
+   "limit": 7,
+   "expected": [
+    "19970929T090000",
+    "19971030T090000",
+    "19971127T090000",
+    "19971230T090000",
+    "19980129T090000",
+    "19980226T090000",
+    "19980330T090000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "regression.rs:7"
+  },
+  {
+   "id": "rust-rrule-0038",
+   "name": "daylight_saving::daylight_savings_1",
+   "dtstart": "20210301T022210",
+   "tzid": "America/Vancouver",
+   "rrule": [
+    "FREQ=DAILY;COUNT=30"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "20210301T022210",
+    "20210302T022210",
+    "20210303T022210",
+    "20210304T022210",
+    "20210305T022210",
+    "20210306T022210",
+    "20210307T022210",
+    "20210308T022210",
+    "20210309T022210",
+    "20210310T022210",
+    "20210311T022210",
+    "20210312T022210",
+    "20210313T022210",
+    "20210314T032210",
+    "20210315T022210",
+    "20210316T022210",
+    "20210317T022210",
+    "20210318T022210",
+    "20210319T022210",
+    "20210320T022210",
+    "20210321T022210",
+    "20210322T022210",
+    "20210323T022210",
+    "20210324T022210",
+    "20210325T022210",
+    "20210326T022210",
+    "20210327T022210",
+    "20210328T022210",
+    "20210329T022210",
+    "20210330T022210"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "all_unchecked(); daylight_saving.rs:4"
+  },
+  {
+   "id": "rust-rrule-0039",
+   "name": "daylight_saving::daylight_savings_2",
+   "dtstart": "20210214T093000",
+   "tzid": "Europe/Paris",
+   "rrule": [
+    "FREQ=WEEKLY;UNTIL=20210508T083000Z;INTERVAL=2;BYDAY=MO;WKST=MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "20210222T093000",
+    "20210308T093000",
+    "20210322T093000",
+    "20210405T093000",
+    "20210419T093000",
+    "20210503T093000"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "daylight_saving.rs:49"
+  },
+  {
+   "id": "rust-rrule-0040",
+   "name": "rrule::yearly",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=9;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19980902T090000Z",
+    "19990902T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:7"
+  },
+  {
+   "id": "rust-rrule-0041",
+   "name": "rrule::yearly_interval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=2;COUNT=3;BYMONTH=9;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19990902T090000Z",
+    "20010902T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:31"
+  },
+  {
+   "id": "rust-rrule-0042",
+   "name": "rrule::yearly_interval_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;INTERVAL=40;COUNT=3;BYMONTH=9;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "20370902T090000Z",
+    "20770902T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:56"
+  },
+  {
+   "id": "rust-rrule-0043",
+   "name": "rrule::yearly_by_easter",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYHOUR=9;BYMINUTE=0;BYSECOND=0;BYEASTER=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980412T090000Z",
+    "19990404T090000Z",
+    "20000423T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.rs:82"
+  },
+  {
+   "id": "rust-rrule-0044",
+   "name": "rrule::yearly_by_easterpos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYHOUR=9;BYMINUTE=0;BYSECOND=0;BYEASTER=1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980413T090000Z",
+    "19990405T090000Z",
+    "20000424T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.rs:106"
+  },
+  {
+   "id": "rust-rrule-0045",
+   "name": "rrule::yearly_by_easterpos_neg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYHOUR=9;BYMINUTE=0;BYSECOND=0;BYEASTER=-2"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T090000Z",
+    "19990402T090000Z",
+    "20000421T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.rs:130"
+  },
+  {
+   "id": "rust-rrule-0046",
+   "name": "rrule::yearly_by_month",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980102T090000Z",
+    "19980302T090000Z",
+    "19990102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:153"
+  },
+  {
+   "id": "rust-rrule-0047",
+   "name": "rrule::yearly_by_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTHDAY=1,3;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T090000Z",
+    "19971001T090000Z",
+    "19971003T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:177"
+  },
+  {
+   "id": "rust-rrule-0048",
+   "name": "rrule::yearly_by_month_and_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T090000Z",
+    "19980107T090000Z",
+    "19980305T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:200"
+  },
+  {
+   "id": "rust-rrule-0049",
+   "name": "rrule::yearly_by_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:224"
+  },
+  {
+   "id": "rust-rrule-0050",
+   "name": "rrule::yearly_by_nweekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYDAY=1TU,-1TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971225T090000Z",
+    "19980106T090000Z",
+    "19981231T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:247"
+  },
+  {
+   "id": "rust-rrule-0051",
+   "name": "rrule::yearly_by_nweekday_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYDAY=13TU,-13TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971002T090000Z",
+    "19980331T090000Z",
+    "19981008T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:273"
+  },
+  {
+   "id": "rust-rrule-0052",
+   "name": "rrule::yearly_by_month_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980106T090000Z",
+    "19980108T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:299"
+  },
+  {
+   "id": "rust-rrule-0053",
+   "name": "rrule::yearly_by_month_and_nweekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYDAY=1TU,-1TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980106T090000Z",
+    "19980129T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:323"
+  },
+  {
+   "id": "rust-rrule-0054",
+   "name": "rrule::yearly_by_month_and_nweekday_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYDAY=3TU,-3TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980115T090000Z",
+    "19980120T090000Z",
+    "19980312T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:350"
+  },
+  {
+   "id": "rust-rrule-0055",
+   "name": "rrule::yearly_by_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980203T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:377"
+  },
+  {
+   "id": "rust-rrule-0056",
+   "name": "rrule::yearly_by_month_and_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980303T090000Z",
+    "20010301T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:401"
+  },
+  {
+   "id": "rust-rrule-0057",
+   "name": "rrule::yearly_by_yearday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=4;BYYEARDAY=1,100,200,365;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19980101T090000Z",
+    "19980410T090000Z",
+    "19980719T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:426"
+  },
+  {
+   "id": "rust-rrule-0058",
+   "name": "rrule::yearly_by_yeardayneg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=4;BYYEARDAY=-365,-266,-166,-1;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19980101T090000Z",
+    "19980410T090000Z",
+    "19980719T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:450"
+  },
+  {
+   "id": "rust-rrule-0059",
+   "name": "rrule::yearly_by_month_and_yearday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=1,100,200,365;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T090000Z",
+    "19980719T090000Z",
+    "19990410T090000Z",
+    "19990719T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:474"
+  },
+  {
+   "id": "rust-rrule-0060",
+   "name": "rrule::yearly_by_weekno",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYWEEKNO=20;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980511T090000Z",
+    "19980512T090000Z",
+    "19980513T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:499"
+  },
+  {
+   "id": "rust-rrule-0061",
+   "name": "rrule::yearly_by_weekno_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYWEEKNO=1;BYDAY=MO;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971229T090000Z",
+    "19990104T090000Z",
+    "20000103T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:522"
+  },
+  {
+   "id": "rust-rrule-0062",
+   "name": "rrule::yearly_by_weekno_and_weekday_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYWEEKNO=52;BYDAY=SU;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T090000Z",
+    "19981227T090000Z",
+    "20000102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:546"
+  },
+  {
+   "id": "rust-rrule-0063",
+   "name": "rrule::yearly_by_weekno_and_weekday_last",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYWEEKNO=-1;BYDAY=SU;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971228T090000Z",
+    "19990103T090000Z",
+    "20000102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:570"
+  },
+  {
+   "id": "rust-rrule-0064",
+   "name": "rrule::yearly_by_weekno_and_weekday53_last",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYWEEKNO=53;BYDAY=MO;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19981228T090000Z",
+    "20041227T090000Z",
+    "20091228T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:594"
+  },
+  {
+   "id": "rust-rrule-0065",
+   "name": "rrule::yearly_by_hour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=9;BYMONTHDAY=2;BYHOUR=6,18;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19980902T060000Z",
+    "19980902T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:618"
+  },
+  {
+   "id": "rust-rrule-0066",
+   "name": "rrule::yearly_by_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=9;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19980902T090600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:642"
+  },
+  {
+   "id": "rust-rrule-0067",
+   "name": "rrule::yearly_by_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=9;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=0;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19980902T090006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:666"
+  },
+  {
+   "id": "rust-rrule-0068",
+   "name": "rrule::yearly_by_hour_and_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=9;BYMONTHDAY=2;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19980902T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:690"
+  },
+  {
+   "id": "rust-rrule-0069",
+   "name": "rrule::yearly_by_hour_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=9;BYMONTHDAY=2;BYHOUR=6,18;BYMINUTE=0;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19980902T060006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:714"
+  },
+  {
+   "id": "rust-rrule-0070",
+   "name": "rrule::yearly_by_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=9;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:738"
+  },
+  {
+   "id": "rust-rrule-0071",
+   "name": "rrule::yearly_by_hour_and_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYMONTH=9;BYMONTHDAY=2;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:762"
+  },
+  {
+   "id": "rust-rrule-0072",
+   "name": "rrule::yearly_by_setpos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=YEARLY;COUNT=3;BYSETPOS=3,-3;BYMONTHDAY=15;BYHOUR=6,18;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971115T180000Z",
+    "19980215T060000Z",
+    "19981115T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:786"
+  },
+  {
+   "id": "rust-rrule-0073",
+   "name": "rrule::monthly",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19971002T090000Z",
+    "19971102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:810"
+  },
+  {
+   "id": "rust-rrule-0074",
+   "name": "rrule::monthly_interval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=2;COUNT=3;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19971102T090000Z",
+    "19980102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:833"
+  },
+  {
+   "id": "rust-rrule-0075",
+   "name": "rrule::monthly_interval_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=18;COUNT=3;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19990302T090000Z",
+    "20000902T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:857"
+  },
+  {
+   "id": "rust-rrule-0076",
+   "name": "rrule::monthly_by_easter",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYHOUR=9;BYMINUTE=0;BYSECOND=0;BYEASTER=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980412T090000Z",
+    "19990404T090000Z",
+    "20000423T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.rs:882"
+  },
+  {
+   "id": "rust-rrule-0077",
+   "name": "rrule::monthly_by_easterpos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYHOUR=9;BYMINUTE=0;BYSECOND=0;BYEASTER=1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980413T090000Z",
+    "19990405T090000Z",
+    "20000424T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.rs:906"
+  },
+  {
+   "id": "rust-rrule-0078",
+   "name": "rrule::monthly_by_easterpos_neg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYHOUR=9;BYMINUTE=0;BYSECOND=0;BYEASTER=-2"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T090000Z",
+    "19990402T090000Z",
+    "20000421T090000Z"
+   ],
+   "error": false,
+   "extensions": [
+    "BYEASTER"
+   ],
+   "comment": "rrule.rs:930"
+  },
+  {
+   "id": "rust-rrule-0079",
+   "name": "rrule::monthly_neg_by_monthday_janfeb_for_nonleapyear",
+   "dtstart": "20131201T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=4;BYMONTHDAY=-1;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "20131231T090000Z",
+    "20140131T090000Z",
+    "20140228T090000Z",
+    "20140331T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:953"
+  },
+  {
+   "id": "rust-rrule-0080",
+   "name": "rrule::monthly_neg_by_monthday_janfeb_for_leapyear",
+   "dtstart": "20151201T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=4;BYMONTHDAY=-1;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "20151231T090000Z",
+    "20160131T090000Z",
+    "20160229T090000Z",
+    "20160331T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:977"
+  },
+  {
+   "id": "rust-rrule-0081",
+   "name": "rrule::monthly_neg_monthday",
+   "dtstart": "20151201T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=6;BYMONTHDAY=-1,-3;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "20151229T090000Z",
+    "20151231T090000Z",
+    "20160129T090000Z",
+    "20160131T090000Z",
+    "20160227T090000Z",
+    "20160229T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1001"
+  },
+  {
+   "id": "rust-rrule-0082",
+   "name": "rrule::monthly_by_month",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980102T090000Z",
+    "19980302T090000Z",
+    "19990102T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1027"
+  },
+  {
+   "id": "rust-rrule-0083",
+   "name": "rrule::monthly_by_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=1,3;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T090000Z",
+    "19971001T090000Z",
+    "19971003T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1051"
+  },
+  {
+   "id": "rust-rrule-0084",
+   "name": "rrule::monthly_by_month_and_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T090000Z",
+    "19980107T090000Z",
+    "19980305T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1074"
+  },
+  {
+   "id": "rust-rrule-0085",
+   "name": "rrule::monthly_by_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1098"
+  },
+  {
+   "id": "rust-rrule-0086",
+   "name": "rrule::monthly_by_nweekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYDAY=1TU,-1TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970925T090000Z",
+    "19971007T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1121"
+  },
+  {
+   "id": "rust-rrule-0087",
+   "name": "rrule::monthly_by_nweekday_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYDAY=3TU,-3TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970911T090000Z",
+    "19970916T090000Z",
+    "19971016T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1147"
+  },
+  {
+   "id": "rust-rrule-0088",
+   "name": "rrule::issue_104",
+   "dtstart": "20231030T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;INTERVAL=2;COUNT=3;BYDAY=-1MO"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "20231030T090000Z",
+    "20231225T090000Z",
+    "20240226T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1173"
+  },
+  {
+   "id": "rust-rrule-0089",
+   "name": "rrule::monthly_by_month_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980106T090000Z",
+    "19980108T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1194"
+  },
+  {
+   "id": "rust-rrule-0090",
+   "name": "rrule::monthly_by_month_and_nweekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYDAY=1TU,-1TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980106T090000Z",
+    "19980129T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1218"
+  },
+  {
+   "id": "rust-rrule-0091",
+   "name": "rrule::monthly_by_month_and_nweekday_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYDAY=3TU,-3TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980115T090000Z",
+    "19980120T090000Z",
+    "19980312T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1245"
+  },
+  {
+   "id": "rust-rrule-0092",
+   "name": "rrule::monthly_by_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980203T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1272"
+  },
+  {
+   "id": "rust-rrule-0093",
+   "name": "rrule::monthly_by_month_and_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980303T090000Z",
+    "20010301T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1296"
+  },
+  {
+   "id": "rust-rrule-0094",
+   "name": "rrule::monthly_by_hour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=2;BYHOUR=6,18;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19971002T060000Z",
+    "19971002T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1321"
+  },
+  {
+   "id": "rust-rrule-0095",
+   "name": "rrule::monthly_by_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19971002T090600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1344"
+  },
+  {
+   "id": "rust-rrule-0096",
+   "name": "rrule::monthly_by_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=0;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19971002T090006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1367"
+  },
+  {
+   "id": "rust-rrule-0097",
+   "name": "rrule::monthly_by_hour_and_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=2;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19971002T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1390"
+  },
+  {
+   "id": "rust-rrule-0098",
+   "name": "rrule::monthly_by_hour_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=2;BYHOUR=6,18;BYMINUTE=0;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19971002T060006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1413"
+  },
+  {
+   "id": "rust-rrule-0099",
+   "name": "rrule::monthly_by_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=2;BYHOUR=9;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1436"
+  },
+  {
+   "id": "rust-rrule-0100",
+   "name": "rrule::monthly_by_hour_and_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYMONTHDAY=2;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1459"
+  },
+  {
+   "id": "rust-rrule-0101",
+   "name": "rrule::monthly_by_setpos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MONTHLY;COUNT=3;BYSETPOS=3,-3;BYMONTHDAY=13,17;BYHOUR=6,18;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970913T180000Z",
+    "19970917T060000Z",
+    "19971013T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1482"
+  },
+  {
+   "id": "rust-rrule-0102",
+   "name": "rrule::weekly",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=TU;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970909T090000Z",
+    "19970916T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1506"
+  },
+  {
+   "id": "rust-rrule-0103",
+   "name": "rrule::weekly_interval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;COUNT=3;BYDAY=TU;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970916T090000Z",
+    "19970930T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1529"
+  },
+  {
+   "id": "rust-rrule-0104",
+   "name": "rrule::weekly_interval_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=20;COUNT=3;BYDAY=TU;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19980120T090000Z",
+    "19980609T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1553"
+  },
+  {
+   "id": "rust-rrule-0105",
+   "name": "rrule::weekly_by_month",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=6;BYMONTH=1,3;BYDAY=TU;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980106T090000Z",
+    "19980113T090000Z",
+    "19980120T090000Z",
+    "19980127T090000Z",
+    "19980303T090000Z",
+    "19980310T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1577"
+  },
+  {
+   "id": "rust-rrule-0106",
+   "name": "rrule::weekly_by_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1604"
+  },
+  {
+   "id": "rust-rrule-0107",
+   "name": "rrule::weekly_by_nweekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1628"
+  },
+  {
+   "id": "rust-rrule-0108",
+   "name": "rrule::weekly_by_month_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980106T090000Z",
+    "19980108T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1651"
+  },
+  {
+   "id": "rust-rrule-0109",
+   "name": "rrule::weekly_by_hour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=TU;BYHOUR=6,18;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970909T060000Z",
+    "19970909T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1675"
+  },
+  {
+   "id": "rust-rrule-0110",
+   "name": "rrule::weekly_by_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=TU;BYHOUR=9;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19970909T090600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1698"
+  },
+  {
+   "id": "rust-rrule-0111",
+   "name": "rrule::weekly_by_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=TU;BYHOUR=9;BYMINUTE=0;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19970909T090006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1721"
+  },
+  {
+   "id": "rust-rrule-0112",
+   "name": "rrule::weekly_by_hour_and_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=TU;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19970909T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1744"
+  },
+  {
+   "id": "rust-rrule-0113",
+   "name": "rrule::weekly_by_hour_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=TU;BYHOUR=6,18;BYMINUTE=0;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19970909T060006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1767"
+  },
+  {
+   "id": "rust-rrule-0114",
+   "name": "rrule::weekly_by_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYDAY=TU;BYHOUR=9;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1790"
+  },
+  {
+   "id": "rust-rrule-0115",
+   "name": "rrule::weekly_by_hour_and_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=5;BYDAY=TU;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z",
+    "19970902T181818Z",
+    "19970909T060606Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1813"
+  },
+  {
+   "id": "rust-rrule-0116",
+   "name": "rrule::weekly_by_setpos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;COUNT=3;BYSETPOS=3,-3;BYDAY=TU,TH;BYHOUR=6,18;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970904T060000Z",
+    "19970909T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1838"
+  },
+  {
+   "id": "rust-rrule-0117",
+   "name": "rrule::daily",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T090000Z",
+    "19970904T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1862"
+  },
+  {
+   "id": "rust-rrule-0118",
+   "name": "rrule::daily_interval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=2;COUNT=3;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970906T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1884"
+  },
+  {
+   "id": "rust-rrule-0119",
+   "name": "rrule::daily_interval_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;INTERVAL=92;COUNT=3;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19971203T090000Z",
+    "19980305T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1907"
+  },
+  {
+   "id": "rust-rrule-0120",
+   "name": "rrule::daily_by_month",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTH=1,3;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980102T090000Z",
+    "19980103T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1930"
+  },
+  {
+   "id": "rust-rrule-0121",
+   "name": "rrule::daily_by_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTHDAY=1,3;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T090000Z",
+    "19971001T090000Z",
+    "19971003T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1953"
+  },
+  {
+   "id": "rust-rrule-0122",
+   "name": "rrule::daily_by_month_and_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T090000Z",
+    "19980107T090000Z",
+    "19980305T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:1976"
+  },
+  {
+   "id": "rust-rrule-0123",
+   "name": "rrule::daily_by_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970904T090000Z",
+    "19970909T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2000"
+  },
+  {
+   "id": "rust-rrule-0124",
+   "name": "rrule::daily_by_month_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980106T090000Z",
+    "19980108T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2023"
+  },
+  {
+   "id": "rust-rrule-0125",
+   "name": "rrule::daily_by_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980203T090000Z",
+    "19980303T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2047"
+  },
+  {
+   "id": "rust-rrule-0126",
+   "name": "rrule::daily_by_month_and_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T090000Z",
+    "19980303T090000Z",
+    "20010301T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2071"
+  },
+  {
+   "id": "rust-rrule-0127",
+   "name": "rrule::daily_by_hour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=6,18;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970903T060000Z",
+    "19970903T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2096"
+  },
+  {
+   "id": "rust-rrule-0128",
+   "name": "rrule::daily_by_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=9;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19970903T090600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2118"
+  },
+  {
+   "id": "rust-rrule-0129",
+   "name": "rrule::daily_by_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=9;BYMINUTE=0;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19970903T090006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2140"
+  },
+  {
+   "id": "rust-rrule-0130",
+   "name": "rrule::daily_by_hour_and_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19970903T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2162"
+  },
+  {
+   "id": "rust-rrule-0131",
+   "name": "rrule::daily_by_hour_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=6,18;BYMINUTE=0;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19970903T060006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2184"
+  },
+  {
+   "id": "rust-rrule-0132",
+   "name": "rrule::daily_by_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=9;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2206"
+  },
+  {
+   "id": "rust-rrule-0133",
+   "name": "rrule::daily_by_hour_and_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2228"
+  },
+  {
+   "id": "rust-rrule-0134",
+   "name": "rrule::daily_by_setpos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;BYSETPOS=3,-3;BYHOUR=6,18;BYMINUTE=15,45;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T181500Z",
+    "19970903T064500Z",
+    "19970903T181500Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2250"
+  },
+  {
+   "id": "rust-rrule-0135",
+   "name": "rrule::hourly",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T100000Z",
+    "19970902T110000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2273"
+  },
+  {
+   "id": "rust-rrule-0136",
+   "name": "rrule::hourly_interval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=2;COUNT=3;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T110000Z",
+    "19970902T130000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2294"
+  },
+  {
+   "id": "rust-rrule-0137",
+   "name": "rrule::hourly_interval_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=769;COUNT=3;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19971004T100000Z",
+    "19971105T110000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2316"
+  },
+  {
+   "id": "rust-rrule-0138",
+   "name": "rrule::hourly_by_month",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTH=1,3;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T010000Z",
+    "19980101T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2338"
+  },
+  {
+   "id": "rust-rrule-0139",
+   "name": "rrule::hourly_by_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTHDAY=1,3;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T000000Z",
+    "19970903T010000Z",
+    "19970903T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2360"
+  },
+  {
+   "id": "rust-rrule-0140",
+   "name": "rrule::hourly_by_month_and_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T000000Z",
+    "19980105T010000Z",
+    "19980105T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2382"
+  },
+  {
+   "id": "rust-rrule-0141",
+   "name": "rrule::hourly_by_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=5;COUNT=5;BYDAY=TU,TH;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T140000Z",
+    "19970902T190000Z",
+    "19970904T010000Z",
+    "19970904T060000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2405"
+  },
+  {
+   "id": "rust-rrule-0142",
+   "name": "rrule::hourly_by_month_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T010000Z",
+    "19980101T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2430"
+  },
+  {
+   "id": "rust-rrule-0143",
+   "name": "rrule::hourly_by_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T010000Z",
+    "19980101T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2453"
+  },
+  {
+   "id": "rust-rrule-0144",
+   "name": "rrule::hourly_by_month_and_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T010000Z",
+    "19980101T020000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2476"
+  },
+  {
+   "id": "rust-rrule-0145",
+   "name": "rrule::hourly_by_yearday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=12;COUNT=8;BYYEARDAY=1,100,200,365;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19971231T210000Z",
+    "19980101T090000Z",
+    "19980101T210000Z",
+    "19980410T090000Z",
+    "19980410T210000Z",
+    "19980719T090000Z",
+    "19980719T210000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2500"
+  },
+  {
+   "id": "rust-rrule-0146",
+   "name": "rrule::hourly_by_yeardayneg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;INTERVAL=12;COUNT=8;BYYEARDAY=-365,-266,-166,-1;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T090000Z",
+    "19971231T210000Z",
+    "19980101T090000Z",
+    "19980101T210000Z",
+    "19980410T090000Z",
+    "19980410T210000Z",
+    "19980719T090000Z",
+    "19980719T210000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2528"
+  },
+  {
+   "id": "rust-rrule-0147",
+   "name": "rrule::hourly_by_month_and_yearday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=1,100,200,365;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T000000Z",
+    "19980410T010000Z",
+    "19980410T020000Z",
+    "19980410T030000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2556"
+  },
+  {
+   "id": "rust-rrule-0148",
+   "name": "rrule::hourly_by_hour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYHOUR=6,18;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970903T060000Z",
+    "19970903T180000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2580"
+  },
+  {
+   "id": "rust-rrule-0149",
+   "name": "rrule::hourly_by_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19970902T100600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2602"
+  },
+  {
+   "id": "rust-rrule-0150",
+   "name": "rrule::hourly_by_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMINUTE=0;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19970902T100006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2623"
+  },
+  {
+   "id": "rust-rrule-0151",
+   "name": "rrule::hourly_by_hour_and_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19970903T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2644"
+  },
+  {
+   "id": "rust-rrule-0152",
+   "name": "rrule::hourly_by_hour_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYHOUR=6,18;BYMINUTE=0;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19970903T060006Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2666"
+  },
+  {
+   "id": "rust-rrule-0153",
+   "name": "rrule::hourly_by_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2688"
+  },
+  {
+   "id": "rust-rrule-0154",
+   "name": "rrule::hourly_by_hour_and_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=5;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z",
+    "19970902T181818Z",
+    "19970903T060606Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2709"
+  },
+  {
+   "id": "rust-rrule-0155",
+   "name": "rrule::hourly_by_setpos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=HOURLY;COUNT=3;BYSETPOS=3,-3;BYMINUTE=15,45;BYSECOND=15,45"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T091545Z",
+    "19970902T094515Z",
+    "19970902T101545Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2733"
+  },
+  {
+   "id": "rust-rrule-0156",
+   "name": "rrule::minutely",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090100Z",
+    "19970902T090200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2755"
+  },
+  {
+   "id": "rust-rrule-0157",
+   "name": "rrule::minutely_interval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;INTERVAL=2;COUNT=3;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090200Z",
+    "19970902T090400Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2775"
+  },
+  {
+   "id": "rust-rrule-0158",
+   "name": "rrule::minutely_interval_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;INTERVAL=1501;COUNT=3;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T100100Z",
+    "19970904T110200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2796"
+  },
+  {
+   "id": "rust-rrule-0159",
+   "name": "rrule::minutely_by_month",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTH=1,3;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000100Z",
+    "19980101T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2817"
+  },
+  {
+   "id": "rust-rrule-0160",
+   "name": "rrule::minutely_by_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTHDAY=1,3;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T000000Z",
+    "19970903T000100Z",
+    "19970903T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2838"
+  },
+  {
+   "id": "rust-rrule-0161",
+   "name": "rrule::minutely_by_month_and_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T000000Z",
+    "19980105T000100Z",
+    "19980105T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2859"
+  },
+  {
+   "id": "rust-rrule-0162",
+   "name": "rrule::minutely_by_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYDAY=TH,SA;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970904T000000Z",
+    "19970904T000100Z",
+    "19970904T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2881"
+  },
+  {
+   "id": "rust-rrule-0163",
+   "name": "rrule::minutely_by_month_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000100Z",
+    "19980101T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2902"
+  },
+  {
+   "id": "rust-rrule-0164",
+   "name": "rrule::minutely_by_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000100Z",
+    "19980101T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2924"
+  },
+  {
+   "id": "rust-rrule-0165",
+   "name": "rrule::minutely_by_month_and_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000100Z",
+    "19980101T000200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2946"
+  },
+  {
+   "id": "rust-rrule-0166",
+   "name": "rrule::minutely_by_yearday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=4;BYYEARDAY=1,100,200,365;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T000000Z",
+    "19971231T000100Z",
+    "19971231T000200Z",
+    "19971231T000300Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2969"
+  },
+  {
+   "id": "rust-rrule-0167",
+   "name": "rrule::minutely_by_yeardayneg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=4;BYYEARDAY=-365,-266,-166,-1;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T000000Z",
+    "19971231T000100Z",
+    "19971231T000200Z",
+    "19971231T000300Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:2991"
+  },
+  {
+   "id": "rust-rrule-0168",
+   "name": "rrule::minutely_by_month_and_yearday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=4;BYMONTH=4,7;BYYEARDAY=1,100,200,365;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T000000Z",
+    "19980410T000100Z",
+    "19980410T000200Z",
+    "19980410T000300Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3013"
+  },
+  {
+   "id": "rust-rrule-0169",
+   "name": "rrule::minutely_by_hour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYHOUR=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970902T180100Z",
+    "19970902T180200Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3036"
+  },
+  {
+   "id": "rust-rrule-0170",
+   "name": "rrule::minutely_by_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T091800Z",
+    "19970902T100600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3057"
+  },
+  {
+   "id": "rust-rrule-0171",
+   "name": "rrule::minutely_by_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19970902T090106Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3078"
+  },
+  {
+   "id": "rust-rrule-0172",
+   "name": "rrule::minutely_by_hour_and_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T181800Z",
+    "19970903T060600Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3098"
+  },
+  {
+   "id": "rust-rrule-0173",
+   "name": "rrule::minutely_by_hour_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYHOUR=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19970902T180106Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3120"
+  },
+  {
+   "id": "rust-rrule-0174",
+   "name": "rrule::minutely_by_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3141"
+  },
+  {
+   "id": "rust-rrule-0175",
+   "name": "rrule::minutely_by_hour_and_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=5;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z",
+    "19970902T181818Z",
+    "19970903T060606Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3162"
+  },
+  {
+   "id": "rust-rrule-0176",
+   "name": "rrule::minutely_by_setpos",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=MINUTELY;COUNT=3;BYSETPOS=3,-3;BYSECOND=15,30,45"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090015Z",
+    "19970902T090045Z",
+    "19970902T090115Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3186"
+  },
+  {
+   "id": "rust-rrule-0177",
+   "name": "rrule::secondly",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090001Z",
+    "19970902T090002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3207"
+  },
+  {
+   "id": "rust-rrule-0178",
+   "name": "rrule::secondly_interval",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;INTERVAL=2;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T090002Z",
+    "19970902T090004Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3226"
+  },
+  {
+   "id": "rust-rrule-0179",
+   "name": "rrule::secondly_interval_large_under_limit",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;INTERVAL=50000;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970902T225320Z",
+    "19970903T124640Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3246"
+  },
+  {
+   "id": "rust-rrule-0180",
+   "name": "rrule::secondly_interval_large",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;INTERVAL=60061;COUNT=3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T014101Z",
+    "19970903T182202Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "all_unchecked(); rrule.rs:3266"
+  },
+  {
+   "id": "rust-rrule-0181",
+   "name": "rrule::secondly_by_month",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTH=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000001Z",
+    "19980101T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3286"
+  },
+  {
+   "id": "rust-rrule-0182",
+   "name": "rrule::secondly_by_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTHDAY=1,3"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970903T000000Z",
+    "19970903T000001Z",
+    "19970903T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3306"
+  },
+  {
+   "id": "rust-rrule-0183",
+   "name": "rrule::secondly_by_month_and_monthday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=5,7"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980105T000000Z",
+    "19980105T000001Z",
+    "19980105T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3326"
+  },
+  {
+   "id": "rust-rrule-0184",
+   "name": "rrule::secondly_by_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYDAY=TH,SA"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970904T000000Z",
+    "19970904T000001Z",
+    "19970904T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3347"
+  },
+  {
+   "id": "rust-rrule-0185",
+   "name": "rrule::secondly_by_month_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTH=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000001Z",
+    "19980101T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3367"
+  },
+  {
+   "id": "rust-rrule-0186",
+   "name": "rrule::secondly_by_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000001Z",
+    "19980101T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3388"
+  },
+  {
+   "id": "rust-rrule-0187",
+   "name": "rrule::secondly_by_month_and_monthday_and_weekday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMONTH=1,3;BYMONTHDAY=1,3;BYDAY=TU,TH"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980101T000000Z",
+    "19980101T000001Z",
+    "19980101T000002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3409"
+  },
+  {
+   "id": "rust-rrule-0188",
+   "name": "rrule::secondly_by_yearday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=4;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T000000Z",
+    "19971231T000001Z",
+    "19971231T000002Z",
+    "19971231T000003Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3431"
+  },
+  {
+   "id": "rust-rrule-0189",
+   "name": "rrule::secondly_by_yeardayneg",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=4;BYYEARDAY=-365,-266,-166,-1"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19971231T000000Z",
+    "19971231T000001Z",
+    "19971231T000002Z",
+    "19971231T000003Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3452"
+  },
+  {
+   "id": "rust-rrule-0190",
+   "name": "rrule::secondly_by_month_and_yearday",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=4;BYMONTH=4,7;BYYEARDAY=1,100,200,365"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19980410T000000Z",
+    "19980410T000001Z",
+    "19980410T000002Z",
+    "19980410T000003Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3473"
+  },
+  {
+   "id": "rust-rrule-0191",
+   "name": "rrule::secondly_by_hour",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYHOUR=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180000Z",
+    "19970902T180001Z",
+    "19970902T180002Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "all_unchecked(); rrule.rs:3495"
+  },
+  {
+   "id": "rust-rrule-0192",
+   "name": "rrule::secondly_by_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090600Z",
+    "19970902T090601Z",
+    "19970902T090602Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3515"
+  },
+  {
+   "id": "rust-rrule-0193",
+   "name": "rrule::secondly_by_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090006Z",
+    "19970902T090018Z",
+    "19970902T090106Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3535"
+  },
+  {
+   "id": "rust-rrule-0194",
+   "name": "rrule::secondly_by_hour_and_minute",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYHOUR=6,18;BYMINUTE=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180600Z",
+    "19970902T180601Z",
+    "19970902T180602Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "all_unchecked(); rrule.rs:3555"
+  },
+  {
+   "id": "rust-rrule-0195",
+   "name": "rrule::secondly_by_hour_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYHOUR=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180006Z",
+    "19970902T180018Z",
+    "19970902T180106Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "all_unchecked(); rrule.rs:3576"
+  },
+  {
+   "id": "rust-rrule-0196",
+   "name": "rrule::secondly_by_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=3;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090606Z",
+    "19970902T090618Z",
+    "19970902T091806Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3597"
+  },
+  {
+   "id": "rust-rrule-0197",
+   "name": "rrule::secondly_by_hour_and_minute_and_second",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=SECONDLY;COUNT=5;BYHOUR=6,18;BYMINUTE=6,18;BYSECOND=6,18"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T180606Z",
+    "19970902T180618Z",
+    "19970902T181806Z",
+    "19970902T181818Z",
+    "19970903T060606Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "all_unchecked(); rrule.rs:3618"
+  },
+  {
+   "id": "rust-rrule-0198",
+   "name": "rrule::until_not_matching",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=3;UNTIL=19970905T080000Z;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T090000Z",
+    "19970904T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3642"
+  },
+  {
+   "id": "rust-rrule-0199",
+   "name": "rrule::until_matching",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=4;UNTIL=19970904T090000Z;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T090000Z",
+    "19970904T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3665"
+  },
+  {
+   "id": "rust-rrule-0200",
+   "name": "rrule::until_single",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=1;UNTIL=19970902T090000Z;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3688"
+  },
+  {
+   "id": "rust-rrule-0201",
+   "name": "rrule::until_with_date",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=DAILY;COUNT=4;UNTIL=19970905T000000Z;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970903T090000Z",
+    "19970904T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3707"
+  },
+  {
+   "id": "rust-rrule-0202",
+   "name": "rrule::week_start_interval_mo",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;COUNT=3;BYDAY=TU,SU;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970907T090000Z",
+    "19970916T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3730"
+  },
+  {
+   "id": "rust-rrule-0203",
+   "name": "rrule::week_start_interval_su",
+   "dtstart": "19970902T090000Z",
+   "rrule": [
+    "FREQ=WEEKLY;INTERVAL=2;COUNT=3;WKST=SU;BYDAY=TU,SU;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
+   ],
+   "include_dtstart": false,
+   "expected": [
+    "19970902T090000Z",
+    "19970914T090000Z",
+    "19970916T090000Z"
+   ],
+   "error": false,
+   "extensions": [],
+   "comment": "rrule.rs:3754"
+  }
+ ]
+}

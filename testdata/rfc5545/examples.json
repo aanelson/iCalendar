@@ -1,0 +1,2362 @@
+[
+  {
+    "id": "rfc5545-3.1-a",
+    "section": "3.1",
+    "title": "Content line folding (unfolded form)",
+    "kind": "property",
+    "text": "DESCRIPTION:This is a long description that exists on a long line.",
+    "valid": true,
+    "errata": "",
+    "comment": "Unfolded form of the line. It is equivalent to rfc5545-3.1-b."
+  },
+  {
+    "id": "rfc5545-3.1-b",
+    "section": "3.1",
+    "title": "Content line folding (folded form)",
+    "kind": "property",
+    "text": "DESCRIPTION:This is a lo\r\n ng description\r\n  that exists on a long line.",
+    "valid": true,
+    "errata": "",
+    "comment": "Folded form. Unfolding (remove CRLF plus one whitespace character) gives exactly rfc5545-3.1-a. The second continuation line starts with two spaces: the fold character plus a real space."
+  },
+  {
+    "id": "rfc5545-3.1.1-a",
+    "section": "3.1.1",
+    "title": "List and field separators (ATTENDEE)",
+    "kind": "property",
+    "text": "ATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT:mailto:\r\n jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.1.1-b",
+    "section": "3.1.1",
+    "title": "List and field separators (RDATE value list)",
+    "kind": "property",
+    "text": "RDATE;VALUE=DATE:19970304,19970504,19970704,19970904",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.1.3-a",
+    "section": "3.1.3",
+    "title": "Binary content (ATTACH by URI)",
+    "kind": "property",
+    "text": "ATTACH:http://example.com/public/quarterly-report.doc",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.1.3-b",
+    "section": "3.1.3",
+    "title": "Binary content (inline BASE64 ATTACH)",
+    "kind": "property",
+    "text": "ATTACH;FMTTYPE=text/plain;ENCODING=BASE64;VALUE=BINARY:VGhlIH\r\n F1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZy4",
+    "valid": false,
+    "errata": "5602",
+    "comment": "The BASE64 value has no '=' padding (59 characters, which is not a multiple of 4). That is invalid under the 'binary' ABNF in 3.3.1. Erratum 5602 adds the padding. The value decodes to 'The quick brown fox jumps over the lazy dog.'"
+  },
+  {
+    "id": "rfc5545-3.1.3-b-corrected",
+    "section": "3.1.3",
+    "title": "Binary content (inline BASE64 ATTACH)",
+    "kind": "property",
+    "text": "ATTACH;FMTTYPE=text/plain;ENCODING=BASE64;VALUE=BINARY:VGhlIH\r\n F1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZy4=",
+    "valid": true,
+    "errata": "5602",
+    "comment": "Text of rfc5545-3.1.3-b with Verified erratum 5602 applied."
+  },
+  {
+    "id": "rfc5545-3.2-a",
+    "section": "3.2",
+    "title": "Quoted parameter value (ALTREP)",
+    "kind": "parameter",
+    "text": "DESCRIPTION;ALTREP=\"cid:part1.0001@example.org\":The Fall'98 Wild\r\n  Wizards Conference - - Las Vegas\\, NV\\, USA",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.1-a",
+    "section": "3.2.1",
+    "title": "ALTREP",
+    "kind": "parameter",
+    "text": "DESCRIPTION;ALTREP=\"CID:part3.msg.970415T083000@example.com\":\r\n Project XYZ Review Meeting will include the following agenda\r\n  items: (a) Market Overview\\, (b) Finances\\, (c) Project Man\r\n agement",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC follows this with the referenced MIME body part (Content-Type/Content-Id headers and an HTML document). That part is not iCalendar text and is not included."
+  },
+  {
+    "id": "rfc5545-3.2.2-a",
+    "section": "3.2.2",
+    "title": "CN",
+    "kind": "parameter",
+    "text": "ORGANIZER;CN=\"John Smith\":mailto:jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.3-a",
+    "section": "3.2.3",
+    "title": "CUTYPE",
+    "kind": "parameter",
+    "text": "ATTENDEE;CUTYPE=GROUP:mailto:ietf-calsch@example.org",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.4-a",
+    "section": "3.2.4",
+    "title": "DELEGATED-FROM",
+    "kind": "parameter",
+    "text": "ATTENDEE;DELEGATED-FROM=\"mailto:jsmith@example.com\":mailto:\r\n jdoe@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.5-a",
+    "section": "3.2.5",
+    "title": "DELEGATED-TO",
+    "kind": "parameter",
+    "text": "ATTENDEE;DELEGATED-TO=\"mailto:jdoe@example.com\",\"mailto:jqpublic\r\n @example.com\":mailto:jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": "The fold falls inside a quoted parameter value ('jqpublic' / '@example.com')."
+  },
+  {
+    "id": "rfc5545-3.2.6-a",
+    "section": "3.2.6",
+    "title": "DIR",
+    "kind": "parameter",
+    "text": "ORGANIZER;DIR=\"ldap://example.com:6666/o=ABC%20Industries,\r\n c=US???(cn=Jim%20Dolittle)\":mailto:jimdo@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.7-a",
+    "section": "3.2.7",
+    "title": "ENCODING",
+    "kind": "parameter",
+    "text": "ATTACH;FMTTYPE=text/plain;ENCODING=BASE64;VALUE=BINARY:TG9yZW\r\n 0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2ljaW\r\n 5nIGVsaXQsIHNlZCBkbyBlaXVzbW9kIHRlbXBvciBpbmNpZGlkdW50IHV0IG\r\n xhYm9yZSBldCBkb2xvcmUgbWFnbmEgYWxpcXVhLiBVdCBlbmltIGFkIG1pbm\r\n ltIHZlbmlhbSwgcXVpcyBub3N0cnVkIGV4ZXJjaXRhdGlvbiB1bGxhbWNvIG\r\n xhYm9yaXMgbmlzaSB1dCBhbGlxdWlwIGV4IGVhIGNvbW1vZG8gY29uc2VxdW\r\n F0LiBEdWlzIGF1dGUgaXJ1cmUgZG9sb3IgaW4gcmVwcmVoZW5kZXJpdCBpbi\r\n B2b2x1cHRhdGUgdmVsaXQgZXNzZSBjaWxsdW0gZG9sb3JlIGV1IGZ1Z2lhdC\r\n BudWxsYSBwYXJpYXR1ci4gRXhjZXB0ZXVyIHNpbnQgb2NjYWVjYXQgY3VwaW\r\n RhdGF0IG5vbiBwcm9pZGVudCwgc3VudCBpbiBjdWxwYSBxdWkgb2ZmaWNpYS\r\n BkZXNlcnVudCBtb2xsaXQgYW5pbSBpZCBlc3QgbGFib3J1bS4=",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.8-a",
+    "section": "3.2.8",
+    "title": "FMTTYPE",
+    "kind": "parameter",
+    "text": "ATTACH;FMTTYPE=application/msword:ftp://example.com/pub/docs/\r\n agenda.doc",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.9-a",
+    "section": "3.2.9",
+    "title": "FBTYPE",
+    "kind": "parameter",
+    "text": "FREEBUSY;FBTYPE=BUSY:19980415T133000Z/19980415T170000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.10-a",
+    "section": "3.2.10",
+    "title": "LANGUAGE",
+    "kind": "parameter",
+    "text": "SUMMARY;LANGUAGE=en-US:Company Holiday Party",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.10-b",
+    "section": "3.2.10",
+    "title": "LANGUAGE",
+    "kind": "parameter",
+    "text": "LOCATION;LANGUAGE=en:Germany",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.10-c",
+    "section": "3.2.10",
+    "title": "LANGUAGE",
+    "kind": "parameter",
+    "text": "LOCATION;LANGUAGE=no:Tyskland",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.11-a",
+    "section": "3.2.11",
+    "title": "MEMBER",
+    "kind": "parameter",
+    "text": "ATTENDEE;MEMBER=\"mailto:ietf-calsch@example.org\":mailto:\r\n jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.11-b",
+    "section": "3.2.11",
+    "title": "MEMBER",
+    "kind": "parameter",
+    "text": "ATTENDEE;MEMBER=\"mailto:projectA@example.com\",\"mailto:pr\r\n ojectB@example.com\":mailto:janedoe@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.12-a",
+    "section": "3.2.12",
+    "title": "PARTSTAT",
+    "kind": "parameter",
+    "text": "ATTENDEE;PARTSTAT=DECLINED:mailto:jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.13-a",
+    "section": "3.2.13",
+    "title": "RANGE",
+    "kind": "parameter",
+    "text": "RECURRENCE-ID;RANGE=THISANDFUTURE:19980401T133000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.14-a",
+    "section": "3.2.14",
+    "title": "RELATED",
+    "kind": "parameter",
+    "text": "TRIGGER;RELATED=END:PT5M",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.15-a",
+    "section": "3.2.15",
+    "title": "RELTYPE",
+    "kind": "parameter",
+    "text": "RELATED-TO;RELTYPE=SIBLING:19960401-080045-4000F192713@\r\n example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.16-a",
+    "section": "3.2.16",
+    "title": "ROLE",
+    "kind": "parameter",
+    "text": "ATTENDEE;ROLE=CHAIR:mailto:mrbig@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.17-a",
+    "section": "3.2.17",
+    "title": "RSVP",
+    "kind": "parameter",
+    "text": "ATTENDEE;RSVP=TRUE:mailto:jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.18-a",
+    "section": "3.2.18",
+    "title": "SENT-BY",
+    "kind": "parameter",
+    "text": "ORGANIZER;SENT-BY=\"mailto:sray@example.com\":mailto:\r\n jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.19-a",
+    "section": "3.2.19",
+    "title": "TZID",
+    "kind": "parameter",
+    "text": "DTSTART;TZID=America/New_York:19980119T020000",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.2.19-b",
+    "section": "3.2.19",
+    "title": "TZID",
+    "kind": "parameter",
+    "text": "DTEND;TZID=America/New_York:19980119T030000",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.1-a",
+    "section": "3.3.1",
+    "title": "BINARY",
+    "kind": "property",
+    "text": "ATTACH;FMTTYPE=image/vnd.microsoft.icon;ENCODING=BASE64;VALUE\r\n =BINARY:AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAA\r\n AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAgIAAAICAgADAwMAA////AAAA\r\n AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r\n AAAAAAAAAAAAAAAAAAAAAAMwAAAAAAABNEMQAAAAAAAkQgAAAAAAJEREQgAA\r\n ACECQ0QgEgAAQxQzM0E0AABERCRCREQAADRDJEJEQwAAAhA0QwEQAAAAAERE\r\n AAAAAAAAREQAAAAAAAAkQgAAAAAAAAMgAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r\n AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r\n AAAAAAAAAAAA",
+    "valid": true,
+    "errata": "",
+    "comment": "ATTACH with an inline BASE64 icon. The fold falls between 'VALUE' and '=BINARY'."
+  },
+  {
+    "id": "rfc5545-3.3.2-a",
+    "section": "3.3.2",
+    "title": "BOOLEAN",
+    "kind": "value",
+    "text": "TRUE",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.3-a",
+    "section": "3.3.3",
+    "title": "CAL-ADDRESS",
+    "kind": "value",
+    "text": "mailto:jane_doe@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.4-a",
+    "section": "3.3.4",
+    "title": "DATE",
+    "kind": "value",
+    "text": "19970714",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.5-a",
+    "section": "3.3.5",
+    "title": "DATE-TIME (UTC offset form)",
+    "kind": "value",
+    "text": "19980119T230000-0800",
+    "valid": false,
+    "errata": "",
+    "comment": "The RFC presents this as invalid: a DATE-TIME with a numeric UTC offset is not allowed. The RFC annotates it with ';Invalid time format', which is removed here."
+  },
+  {
+    "id": "rfc5545-3.3.5-b",
+    "section": "3.3.5",
+    "title": "DATE-TIME (form #1, floating)",
+    "kind": "value",
+    "text": "19980118T230000",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.5-c",
+    "section": "3.3.5",
+    "title": "DATE-TIME (form #2, UTC)",
+    "kind": "value",
+    "text": "19980119T070000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.5-d",
+    "section": "3.3.5",
+    "title": "DATE-TIME (form #3, TZID reference)",
+    "kind": "value",
+    "text": "TZID=America/New_York:19980119T020000",
+    "valid": true,
+    "errata": "",
+    "comment": "A fragment, as the RFC prints it: a TZID parameter and a value. It is not a complete content line."
+  },
+  {
+    "id": "rfc5545-3.3.5-e",
+    "section": "3.3.5",
+    "title": "DATE-TIME (leap second)",
+    "kind": "value",
+    "text": "19970630T235960Z",
+    "valid": true,
+    "errata": "",
+    "comment": "Second 60 is allowed only for a positive leap second. Implementations that do not support leap seconds SHOULD treat it as second 59."
+  },
+  {
+    "id": "rfc5545-3.3.5-f",
+    "section": "3.3.5",
+    "title": "DATE-TIME (DTSTART floating)",
+    "kind": "property",
+    "text": "DTSTART:19970714T133000",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC annotation '; Local time' is removed. Same instant as -g and -h for a New York user."
+  },
+  {
+    "id": "rfc5545-3.3.5-g",
+    "section": "3.3.5",
+    "title": "DATE-TIME (DTSTART UTC)",
+    "kind": "property",
+    "text": "DTSTART:19970714T173000Z",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC annotation '; UTC time' is removed."
+  },
+  {
+    "id": "rfc5545-3.3.5-h",
+    "section": "3.3.5",
+    "title": "DATE-TIME (DTSTART with TZID)",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970714T133000",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC annotation on the next two lines ('; Local time and time zone reference') is not included."
+  },
+  {
+    "id": "rfc5545-3.3.6-a",
+    "section": "3.3.6",
+    "title": "DURATION",
+    "kind": "value",
+    "text": "P15DT5H0M20S",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.6-b",
+    "section": "3.3.6",
+    "title": "DURATION",
+    "kind": "value",
+    "text": "P7W",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.7-a",
+    "section": "3.3.7",
+    "title": "FLOAT",
+    "kind": "value",
+    "text": "1000000.0000001",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC lists three FLOAT values in one block; each is a separate entry."
+  },
+  {
+    "id": "rfc5545-3.3.7-b",
+    "section": "3.3.7",
+    "title": "FLOAT",
+    "kind": "value",
+    "text": "1.333",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC lists three FLOAT values in one block; each is a separate entry."
+  },
+  {
+    "id": "rfc5545-3.3.7-c",
+    "section": "3.3.7",
+    "title": "FLOAT",
+    "kind": "value",
+    "text": "-3.14",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC lists three FLOAT values in one block; each is a separate entry."
+  },
+  {
+    "id": "rfc5545-3.3.8-a",
+    "section": "3.3.8",
+    "title": "INTEGER",
+    "kind": "value",
+    "text": "1234567890",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC lists four INTEGER values in one block; each is a separate entry."
+  },
+  {
+    "id": "rfc5545-3.3.8-b",
+    "section": "3.3.8",
+    "title": "INTEGER",
+    "kind": "value",
+    "text": "-1234567890",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC lists four INTEGER values in one block; each is a separate entry."
+  },
+  {
+    "id": "rfc5545-3.3.8-c",
+    "section": "3.3.8",
+    "title": "INTEGER",
+    "kind": "value",
+    "text": "+1234567890",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC lists four INTEGER values in one block; each is a separate entry."
+  },
+  {
+    "id": "rfc5545-3.3.8-d",
+    "section": "3.3.8",
+    "title": "INTEGER",
+    "kind": "value",
+    "text": "432109876",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC lists four INTEGER values in one block; each is a separate entry."
+  },
+  {
+    "id": "rfc5545-3.3.9-a",
+    "section": "3.3.9",
+    "title": "PERIOD (explicit)",
+    "kind": "value",
+    "text": "19970101T180000Z/19970102T070000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.9-b",
+    "section": "3.3.9",
+    "title": "PERIOD (start and duration)",
+    "kind": "value",
+    "text": "19970101T180000Z/PT5H30M",
+    "valid": true,
+    "errata": "7332",
+    "comment": "Valid as printed, but the prose does not say UTC. Erratum 7332 removes the 'Z' so the value matches the description."
+  },
+  {
+    "id": "rfc5545-3.3.9-b-corrected",
+    "section": "3.3.9",
+    "title": "PERIOD (start and duration)",
+    "kind": "value",
+    "text": "19970101T180000/PT5H30M",
+    "valid": true,
+    "errata": "7332",
+    "comment": "Text of rfc5545-3.3.9-b with Verified erratum 7332 applied."
+  },
+  {
+    "id": "rfc5545-3.3.10-a",
+    "section": "3.3.10",
+    "title": "RECUR (last work day of the month)",
+    "kind": "value",
+    "text": "FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.10-b",
+    "section": "3.3.10",
+    "title": "RECUR (multiple BYxxx rule parts)",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970105T083000\r\nRRULE:FREQ=YEARLY;INTERVAL=2;BYMONTH=1;BYDAY=SU;BYHOUR=8,9;\r\n BYMINUTE=30",
+    "valid": true,
+    "errata": "",
+    "comment": "Every Sunday in January at 08:30 and 09:30, every other year. The RFC gives no instance list for this one."
+  },
+  {
+    "id": "rfc5545-3.3.10-c",
+    "section": "3.3.10",
+    "title": "RECUR",
+    "kind": "value",
+    "text": "FREQ=DAILY;COUNT=10;INTERVAL=2",
+    "valid": true,
+    "errata": "",
+    "comment": "10 occurrences, every other day."
+  },
+  {
+    "id": "rfc5545-3.3.11-a",
+    "section": "3.3.11",
+    "title": "TEXT",
+    "kind": "value",
+    "text": "Project XYZ Final Review\\nConference Room - 3B\\nCome Prepared.",
+    "valid": true,
+    "errata": "",
+    "comment": "Escaped form of the three-line value 'Project XYZ Final Review' / 'Conference Room - 3B' / 'Come Prepared.' (RFC lines 2565-2567, which show the decoded text, not iCalendar text)."
+  },
+  {
+    "id": "rfc5545-3.3.12-a",
+    "section": "3.3.12",
+    "title": "TIME (UTC offset form)",
+    "kind": "value",
+    "text": "230000-0800",
+    "valid": false,
+    "errata": "",
+    "comment": "The RFC presents this as invalid: a TIME with a numeric UTC offset is not allowed. The RFC annotation ';Invalid time format' is removed."
+  },
+  {
+    "id": "rfc5545-3.3.12-b",
+    "section": "3.3.12",
+    "title": "TIME (form #1, floating)",
+    "kind": "value",
+    "text": "230000",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.12-c",
+    "section": "3.3.12",
+    "title": "TIME (form #2, UTC)",
+    "kind": "value",
+    "text": "070000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.12-d",
+    "section": "3.3.12",
+    "title": "TIME (8:30 AM New York, floating)",
+    "kind": "value",
+    "text": "083000",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC lists three TIME values in one block; each is a separate entry."
+  },
+  {
+    "id": "rfc5545-3.3.12-e",
+    "section": "3.3.12",
+    "title": "TIME (8:30 AM New York, UTC)",
+    "kind": "value",
+    "text": "133000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.12-f",
+    "section": "3.3.12",
+    "title": "TIME (8:30 AM New York, TZID reference)",
+    "kind": "value",
+    "text": "TZID=America/New_York:083000",
+    "valid": true,
+    "errata": "",
+    "comment": "A fragment: a TZID parameter and a value, not a complete content line."
+  },
+  {
+    "id": "rfc5545-3.3.13-a",
+    "section": "3.3.13",
+    "title": "URI",
+    "kind": "value",
+    "text": "http://example.com/my-report.txt",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.14-a",
+    "section": "3.3.14",
+    "title": "UTC-OFFSET",
+    "kind": "value",
+    "text": "-0500",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.3.14-b",
+    "section": "3.3.14",
+    "title": "UTC-OFFSET",
+    "kind": "value",
+    "text": "+0100",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.4-a",
+    "section": "3.4",
+    "title": "iCalendar object",
+    "kind": "calendar",
+    "text": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\r\nBEGIN:VEVENT\r\nUID:19970610T172345Z-AF23B2@example.com\r\nDTSTAMP:19970610T172345Z\r\nDTSTART:19970714T170000Z\r\nDTEND:19970715T040000Z\r\nSUMMARY:Bastille Day Party\r\nEND:VEVENT\r\nEND:VCALENDAR",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.5-a",
+    "section": "3.5",
+    "title": "Property",
+    "kind": "property",
+    "text": "DTSTART:19960415T133000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.5-b",
+    "section": "3.5",
+    "title": "Property (case-insensitive names)",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19980714T120000",
+    "valid": true,
+    "errata": "",
+    "comment": "Inline in the prose on RFC lines 2822-2823, not a separate block. Equivalent to rfc5545-3.5-c."
+  },
+  {
+    "id": "rfc5545-3.5-c",
+    "section": "3.5",
+    "title": "Property (case-insensitive names)",
+    "kind": "property",
+    "text": "DtStart;TzID=America/New_York:19980714T120000",
+    "valid": true,
+    "errata": "",
+    "comment": "Inline in the prose on RFC line 2823. Property and parameter names are case-insensitive, so this is equivalent to rfc5545-3.5-b."
+  },
+  {
+    "id": "rfc5545-3.6.1-a",
+    "section": "3.6.1",
+    "title": "VEVENT (opaque meeting)",
+    "kind": "component",
+    "text": "BEGIN:VEVENT\r\nUID:19970901T130000Z-123401@example.com\r\nDTSTAMP:19970901T130000Z\r\nDTSTART:19970903T163000Z\r\nDTEND:19970903T190000Z\r\nSUMMARY:Annual Employee Review\r\nCLASS:PRIVATE\r\nCATEGORIES:BUSINESS,HUMAN RESOURCES\r\nEND:VEVENT",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.1-b",
+    "section": "3.6.1",
+    "title": "VEVENT (transparent reminder)",
+    "kind": "component",
+    "text": "BEGIN:VEVENT\r\nUID:19970901T130000Z-123402@example.com\r\nDTSTAMP:19970901T130000Z\r\nDTSTART:19970401T163000Z\r\nDTEND:19970402T010000Z\r\nSUMMARY:Laurel is in sensitivity awareness class.\r\nCLASS:PUBLIC\r\nCATEGORIES:BUSINESS,HUMAN RESOURCES\r\nTRANSP:TRANSPARENT\r\nEND:VEVENT",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.1-c",
+    "section": "3.6.1",
+    "title": "VEVENT (annual anniversary)",
+    "kind": "component",
+    "text": "BEGIN:VEVENT\r\nUID:19970901T130000Z-123403@example.com\r\nDTSTAMP:19970901T130000Z\r\nDTSTART;VALUE=DATE:19971102\r\nSUMMARY:Our Blissful Anniversary\r\nTRANSP:TRANSPARENT\r\nCLASS:CONFIDENTIAL\r\nCATEGORIES:ANNIVERSARY,PERSONAL,SPECIAL OCCASION\r\nRRULE:FREQ=YEARLY\r\nEND:VEVENT",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.1-d",
+    "section": "3.6.1",
+    "title": "VEVENT (multi-day all-day event)",
+    "kind": "component",
+    "text": "BEGIN:VEVENT\r\nUID:20070423T123432Z-541111@example.com\r\nDTSTAMP:20070423T123432Z\r\nDTSTART;VALUE=DATE:20070628\r\nDTEND;VALUE=DATE:20070709\r\nSUMMARY:Festival International de Jazz de Montreal\r\nTRANSP:TRANSPARENT\r\nEND:VEVENT",
+    "valid": true,
+    "errata": "",
+    "comment": "DTEND is exclusive: the event covers 2007-06-28 through 2007-07-08."
+  },
+  {
+    "id": "rfc5545-3.6.2-a",
+    "section": "3.6.2",
+    "title": "VTODO (due date)",
+    "kind": "component",
+    "text": "BEGIN:VTODO\r\nUID:20070313T123432Z-456553@example.com\r\nDTSTAMP:20070313T123432Z\r\nDUE;VALUE=DATE:20070501\r\nSUMMARY:Submit Quebec Income Tax Return for 2006\r\nCLASS:CONFIDENTIAL\r\nCATEGORIES:FAMILY,FINANCE\r\nSTATUS:NEEDS-ACTION\r\nEND:VTODO",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.2-b",
+    "section": "3.6.2",
+    "title": "VTODO (completed)",
+    "kind": "component",
+    "text": "BEGIN:VTODO\r\nUID:20070514T103211Z-123404@example.com\r\nDTSTAMP:20070514T103211Z\r\nDTSTART:20070514T110000Z\r\nDUE:20070709T130000Z\r\nCOMPLETED:20070707T100000Z\r\nSUMMARY:Submit Revised Internet-Draft\r\nPRIORITY:1\r\nSTATUS:NEEDS-ACTION\r\nEND:VTODO",
+    "valid": true,
+    "errata": "",
+    "comment": "Has COMPLETED but STATUS:NEEDS-ACTION. That is unusual, but the RFC does not forbid it."
+  },
+  {
+    "id": "rfc5545-3.6.3-a",
+    "section": "3.6.3",
+    "title": "VJOURNAL",
+    "kind": "component",
+    "text": "BEGIN:VJOURNAL\r\nUID:19970901T130000Z-123405@example.com\r\nDTSTAMP:19970901T130000Z\r\nDTSTART;VALUE=DATE:19970317\r\nSUMMARY:Staff meeting minutes\r\nDESCRIPTION:1. Staff meeting: Participants include Joe\\,\r\n  Lisa\\, and Bob. Aurora project plans were reviewed.\r\n  There is currently no budget reserves for this project.\r\n  Lisa will escalate to management. Next meeting on Tuesday.\\n\r\n 2. Telephone Conference: ABC Corp. sales representative\r\n  called to discuss new printer. Promised to get us a demo by\r\n  Friday.\\n3. Henry Miller (Handsoff Insurance): Car was\r\n  totaled by tree. Is looking into a loaner car. 555-2323\r\n  (tel).\r\nEND:VJOURNAL",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.4-a",
+    "section": "3.6.4",
+    "title": "VFREEBUSY (request)",
+    "kind": "component",
+    "text": "BEGIN:VFREEBUSY\r\nUID:19970901T082949Z-FA43EF@example.com\r\nORGANIZER:mailto:jane_doe@example.com\r\nATTENDEE:mailto:john_public@example.com\r\nDTSTART:19971015T050000Z\r\nDTEND:19971016T050000Z\r\nDTSTAMP:19970901T083000Z\r\nEND:VFREEBUSY",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.4-b",
+    "section": "3.6.4",
+    "title": "VFREEBUSY (reply)",
+    "kind": "component",
+    "text": "BEGIN:VFREEBUSY\r\nUID:19970901T095957Z-76A912@example.com\r\nORGANIZER:mailto:jane_doe@example.com\r\nATTENDEE:mailto:john_public@example.com\r\nDTSTAMP:19970901T100000Z\r\nFREEBUSY:19971015T050000Z/PT8H30M,\r\n 19971015T160000Z/PT5H30M,19971015T223000Z/PT6H30M\r\nURL:http://example.com/pub/busy/jpublic-01.ifb\r\nCOMMENT:This iCalendar file contains busy time information for\r\n  the next three months.\r\nEND:VFREEBUSY",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.4-c",
+    "section": "3.6.4",
+    "title": "VFREEBUSY (published)",
+    "kind": "component",
+    "text": "BEGIN:VFREEBUSY\r\nUID:19970901T115957Z-76A912@example.com\r\nDTSTAMP:19970901T120000Z\r\nORGANIZER:jsmith@example.com\r\nDTSTART:19980313T141711Z\r\nDTEND:19980410T141711Z\r\nFREEBUSY:19980314T233000Z/19980315T003000Z\r\nFREEBUSY:19980316T153000Z/19980316T163000Z\r\nFREEBUSY:19980318T030000Z/19980318T040000Z\r\nURL:http://www.example.com/calendar/busytime/jsmith.ifb\r\nEND:VFREEBUSY",
+    "valid": false,
+    "errata": "1916",
+    "comment": "ORGANIZER has no 'mailto:' scheme, so it is not a valid CAL-ADDRESS URI. Erratum 1916 adds the scheme."
+  },
+  {
+    "id": "rfc5545-3.6.4-c-corrected",
+    "section": "3.6.4",
+    "title": "VFREEBUSY (published)",
+    "kind": "component",
+    "text": "BEGIN:VFREEBUSY\r\nUID:19970901T115957Z-76A912@example.com\r\nDTSTAMP:19970901T120000Z\r\nORGANIZER:mailto:jsmith@example.com\r\nDTSTART:19980313T141711Z\r\nDTEND:19980410T141711Z\r\nFREEBUSY:19980314T233000Z/19980315T003000Z\r\nFREEBUSY:19980316T153000Z/19980316T163000Z\r\nFREEBUSY:19980318T030000Z/19980318T040000Z\r\nURL:http://www.example.com/calendar/busytime/jsmith.ifb\r\nEND:VFREEBUSY",
+    "valid": true,
+    "errata": "1916",
+    "comment": "Text of rfc5545-3.6.4-c with Verified erratum 1916 applied."
+  },
+  {
+    "id": "rfc5545-3.6.5-a",
+    "section": "3.6.5",
+    "title": "STANDARD onset (DTSTART)",
+    "kind": "property",
+    "text": "DTSTART:19671029T020000",
+    "valid": true,
+    "errata": "",
+    "comment": "Shown with -b: the 1967 New York onset of Standard Time."
+  },
+  {
+    "id": "rfc5545-3.6.5-b",
+    "section": "3.6.5",
+    "title": "STANDARD onset (TZOFFSETFROM)",
+    "kind": "property",
+    "text": "TZOFFSETFROM:-0400",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.5-c",
+    "section": "3.6.5",
+    "title": "VTIMEZONE (America/New_York, full history since 1967)",
+    "kind": "component",
+    "text": "BEGIN:VTIMEZONE\r\nTZID:America/New_York\r\nLAST-MODIFIED:20050809T050000Z\r\nBEGIN:DAYLIGHT\r\nDTSTART:19670430T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=4;BYDAY=-1SU;UNTIL=19730429T070000Z\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nBEGIN:STANDARD\r\nDTSTART:19671029T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU;UNTIL=20061029T060000Z\r\nTZOFFSETFROM:-0400\r\nTZOFFSETTO:-0500\r\nTZNAME:EST\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:19740106T020000\r\nRDATE:19750223T020000\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nBEGIN:DAYLIGHT\r\nDTSTART:19760425T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=4;BYDAY=-1SU;UNTIL=19860427T070000Z\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nBEGIN:DAYLIGHT\r\nDTSTART:19870405T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=4;BYDAY=1SU;UNTIL=20060402T070000Z\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nBEGIN:DAYLIGHT\r\nDTSTART:20070311T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nBEGIN:STANDARD\r\nDTSTART:20071104T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU\r\nTZOFFSETFROM:-0400\r\nTZOFFSETTO:-0500\r\nTZNAME:EST\r\nEND:STANDARD\r\nEND:VTIMEZONE",
+    "valid": true,
+    "errata": "",
+    "comment": "Crosses a page break in the RFC (page footer/header removed)."
+  },
+  {
+    "id": "rfc5545-3.6.5-d",
+    "section": "3.6.5",
+    "title": "VTIMEZONE (America/New_York, DTSTART only, 2007 rules)",
+    "kind": "component",
+    "text": "BEGIN:VTIMEZONE\r\nTZID:America/New_York\r\nLAST-MODIFIED:20050809T050000Z\r\nBEGIN:STANDARD\r\nDTSTART:20071104T020000\r\nTZOFFSETFROM:-0400\r\nTZOFFSETTO:-0500\r\nTZNAME:EST\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:20070311T020000\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE",
+    "valid": true,
+    "errata": "",
+    "comment": "Only valid for recurring events from 2007-03-11 03:00 EDT through 2008-03-09 01:59:59 EST."
+  },
+  {
+    "id": "rfc5545-3.6.5-e",
+    "section": "3.6.5",
+    "title": "VTIMEZONE (America/New_York, current RRULE rules, TZURL)",
+    "kind": "component",
+    "text": "BEGIN:VTIMEZONE\r\nTZID:America/New_York\r\nLAST-MODIFIED:20050809T050000Z\r\nTZURL:http://zones.example.com/tz/America-New_York.ics\r\nBEGIN:STANDARD\r\nDTSTART:20071104T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU\r\nTZOFFSETFROM:-0400\r\nTZOFFSETTO:-0500\r\nTZNAME:EST\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:20070311T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.5-f",
+    "section": "3.6.5",
+    "title": "VTIMEZONE (Fictitious, daylight rule with end date)",
+    "kind": "component",
+    "text": "BEGIN:VTIMEZONE\r\nTZID:Fictitious\r\nLAST-MODIFIED:19870101T000000Z\r\nBEGIN:STANDARD\r\nDTSTART:19671029T020000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10\r\nTZOFFSETFROM:-0400\r\nTZOFFSETTO:-0500\r\nTZNAME:EST\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:19870405T020000\r\nRRULE:FREQ=YEARLY;BYDAY=1SU;BYMONTH=4;UNTIL=19980404T070000Z\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE",
+    "valid": true,
+    "errata": "",
+    "comment": "Possible RFC defect (no erratum filed). Section 3.6.5 says UNTIL must equal the last onset. Here the DAYLIGHT UNTIL 19980404T070000Z is a Saturday, not a generated onset: the 1998 first-Sunday-of-April onset would be 1998-04-05 07:00Z, which is after UNTIL. So the last DAYLIGHT onset is 1997-04-06. Kept valid=true because the syntax is valid."
+  },
+  {
+    "id": "rfc5545-3.6.5-g",
+    "section": "3.6.5",
+    "title": "VTIMEZONE (Fictitious, two daylight rules)",
+    "kind": "component",
+    "text": "BEGIN:VTIMEZONE\r\nTZID:Fictitious\r\nLAST-MODIFIED:19870101T000000Z\r\nBEGIN:STANDARD\r\nDTSTART:19671029T020000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10\r\nTZOFFSETFROM:-0400\r\nTZOFFSETTO:-0500\r\nTZNAME:EST\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:19870405T020000\r\nRRULE:FREQ=YEARLY;BYDAY=1SU;BYMONTH=4;UNTIL=19980404T070000Z\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nBEGIN:DAYLIGHT\r\nDTSTART:19990424T020000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=4\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE",
+    "valid": true,
+    "errata": "",
+    "comment": "Possible RFC defects (no erratum filed). (1) The first DAYLIGHT has the same unsynchronized UNTIL 19980404T070000Z (a Saturday) as rfc5545-3.6.5-f. (2) The second DAYLIGHT's DTSTART 19990424T020000 is a Saturday, but its RRULE is BYDAY=-1SU;BYMONTH=4, whose 1999 instance is 1999-04-25. DTSTART is not synchronized with the RRULE, so the first onset is unclear. Kept valid=true because the syntax is valid."
+  },
+  {
+    "id": "rfc5545-3.6.6-a",
+    "section": "3.6.6",
+    "title": "VALARM (audio, absolute trigger)",
+    "kind": "component",
+    "text": "BEGIN:VALARM\r\nTRIGGER;VALUE=DATE-TIME:19970317T133000Z\r\nREPEAT:4\r\nDURATION:PT15M\r\nACTION:AUDIO\r\nATTACH;FMTTYPE=audio/basic:ftp://example.com/pub/\r\n sounds/bell-01.aud\r\nEND:VALARM",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.6-b",
+    "section": "3.6.6",
+    "title": "VALARM (display, relative trigger)",
+    "kind": "component",
+    "text": "BEGIN:VALARM\r\nTRIGGER:-PT30M\r\nREPEAT:2\r\nDURATION:PT15M\r\nACTION:DISPLAY\r\nDESCRIPTION:Breakfast meeting with executive\\n\r\n team at 8:30 AM EST.\r\nEND:VALARM",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.6.6-c",
+    "section": "3.6.6",
+    "title": "VALARM (email)",
+    "kind": "component",
+    "text": "BEGIN:VALARM\r\nTRIGGER;RELATED=END:-P2D\r\nACTION:EMAIL\r\nATTENDEE:mailto:john_doe@example.com\r\nSUMMARY:*** REMINDER: SEND AGENDA FOR WEEKLY STAFF MEETING ***\r\nDESCRIPTION:A draft agenda needs to be sent out to the attendees\r\n  to the weekly managers meeting (MGR-LIST). Attached is a\r\n  pointer the document template for the agenda file.\r\nATTACH;FMTTYPE=application/msword:http://example.com/\r\n templates/agenda.doc\r\nEND:VALARM",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.7.1-a",
+    "section": "3.7.1",
+    "title": "CALSCALE",
+    "kind": "property",
+    "text": "CALSCALE:GREGORIAN",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.7.2-a",
+    "section": "3.7.2",
+    "title": "METHOD",
+    "kind": "property",
+    "text": "METHOD:REQUEST",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.7.3-a",
+    "section": "3.7.3",
+    "title": "PRODID",
+    "kind": "property",
+    "text": "PRODID:-//ABC Corporation//NONSGML My Product//EN",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.7.4-a",
+    "section": "3.7.4",
+    "title": "VERSION",
+    "kind": "property",
+    "text": "VERSION:2.0",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.1-a",
+    "section": "3.8.1.1",
+    "title": "ATTACH",
+    "kind": "property",
+    "text": "ATTACH:CID:jsmith.part3.960817T083000.xyzMail@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.1-b",
+    "section": "3.8.1.1",
+    "title": "ATTACH",
+    "kind": "property",
+    "text": "ATTACH;FMTTYPE=application/postscript:ftp://example.com/pub/\r\n reports/r-960812.ps",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.2-a",
+    "section": "3.8.1.2",
+    "title": "CATEGORIES",
+    "kind": "property",
+    "text": "CATEGORIES:APPOINTMENT,EDUCATION",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.2-b",
+    "section": "3.8.1.2",
+    "title": "CATEGORIES",
+    "kind": "property",
+    "text": "CATEGORIES:MEETING",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.3-a",
+    "section": "3.8.1.3",
+    "title": "CLASS",
+    "kind": "property",
+    "text": "CLASS:PUBLIC",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.4-a",
+    "section": "3.8.1.4",
+    "title": "COMMENT",
+    "kind": "property",
+    "text": "COMMENT:The meeting really needs to include both ourselves\r\n  and the customer. We can't hold this meeting without them.\r\n  As a matter of fact\\, the venue for the meeting ought to be at\r\n  their site. - - John",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.5-a",
+    "section": "3.8.1.5",
+    "title": "DESCRIPTION",
+    "kind": "property",
+    "text": "DESCRIPTION:Meeting to provide technical review for \"Phoenix\"\r\n  design.\\nHappy Face Conference Room. Phoenix design team\r\n  MUST attend this meeting.\\nRSVP to team leader.",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.6-a",
+    "section": "3.8.1.6",
+    "title": "GEO",
+    "kind": "property",
+    "text": "GEO:37.386013;-122.082932",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.7-a",
+    "section": "3.8.1.7",
+    "title": "LOCATION",
+    "kind": "property",
+    "text": "LOCATION:Conference Room - F123\\, Bldg. 002",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.7-b",
+    "section": "3.8.1.7",
+    "title": "LOCATION",
+    "kind": "property",
+    "text": "LOCATION;ALTREP=\"http://xyzcorp.com/conf-rooms/f123.vcf\":\r\n Conference Room - F123\\, Bldg. 002",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.8-a",
+    "section": "3.8.1.8",
+    "title": "PERCENT-COMPLETE",
+    "kind": "property",
+    "text": "PERCENT-COMPLETE:39",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.9-a",
+    "section": "3.8.1.9",
+    "title": "PRIORITY",
+    "kind": "property",
+    "text": "PRIORITY:1",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.9-b",
+    "section": "3.8.1.9",
+    "title": "PRIORITY",
+    "kind": "property",
+    "text": "PRIORITY:2",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.9-c",
+    "section": "3.8.1.9",
+    "title": "PRIORITY",
+    "kind": "property",
+    "text": "PRIORITY:0",
+    "valid": true,
+    "errata": "",
+    "comment": "0 means undefined priority. It is the same as omitting the property."
+  },
+  {
+    "id": "rfc5545-3.8.1.10-a",
+    "section": "3.8.1.10",
+    "title": "RESOURCES",
+    "kind": "property",
+    "text": "RESOURCES:EASEL,PROJECTOR,VCR",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.10-b",
+    "section": "3.8.1.10",
+    "title": "RESOURCES",
+    "kind": "property",
+    "text": "RESOURCES;LANGUAGE=fr:Nettoyeur haute pression",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.11-a",
+    "section": "3.8.1.11",
+    "title": "STATUS",
+    "kind": "property",
+    "text": "STATUS:TENTATIVE",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.11-b",
+    "section": "3.8.1.11",
+    "title": "STATUS",
+    "kind": "property",
+    "text": "STATUS:NEEDS-ACTION",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.11-c",
+    "section": "3.8.1.11",
+    "title": "STATUS",
+    "kind": "property",
+    "text": "STATUS:DRAFT",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.1.12-a",
+    "section": "3.8.1.12",
+    "title": "SUMMARY",
+    "kind": "property",
+    "text": "SUMMARY:Department Party",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.1-a",
+    "section": "3.8.2.1",
+    "title": "COMPLETED",
+    "kind": "property",
+    "text": "COMPLETED:19960401T150000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.2-a",
+    "section": "3.8.2.2",
+    "title": "DTEND",
+    "kind": "property",
+    "text": "DTEND:19960401T150000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.2-b",
+    "section": "3.8.2.2",
+    "title": "DTEND",
+    "kind": "property",
+    "text": "DTEND;VALUE=DATE:19980704",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.3-a",
+    "section": "3.8.2.3",
+    "title": "DUE",
+    "kind": "property",
+    "text": "DUE:19980430T000000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.4-a",
+    "section": "3.8.2.4",
+    "title": "DTSTART",
+    "kind": "property",
+    "text": "DTSTART:19980118T073000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.5-a",
+    "section": "3.8.2.5",
+    "title": "DURATION",
+    "kind": "property",
+    "text": "DURATION:PT1H0M0S",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.5-b",
+    "section": "3.8.2.5",
+    "title": "DURATION",
+    "kind": "property",
+    "text": "DURATION:PT15M",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.6-a",
+    "section": "3.8.2.6",
+    "title": "FREEBUSY",
+    "kind": "property",
+    "text": "FREEBUSY;FBTYPE=BUSY-UNAVAILABLE:19970308T160000Z/PT8H30M",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.6-b",
+    "section": "3.8.2.6",
+    "title": "FREEBUSY",
+    "kind": "property",
+    "text": "FREEBUSY;FBTYPE=FREE:19970308T160000Z/PT3H,19970308T200000Z/PT1H",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.6-c",
+    "section": "3.8.2.6",
+    "title": "FREEBUSY",
+    "kind": "property",
+    "text": "FREEBUSY;FBTYPE=FREE:19970308T160000Z/PT3H,19970308T200000Z/PT1H\r\n ,19970308T230000Z/19970309T000000Z",
+    "valid": true,
+    "errata": "",
+    "comment": "The continuation line starts with the list separator ','."
+  },
+  {
+    "id": "rfc5545-3.8.2.7-a",
+    "section": "3.8.2.7",
+    "title": "TRANSP",
+    "kind": "property",
+    "text": "TRANSP:TRANSPARENT",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.2.7-b",
+    "section": "3.8.2.7",
+    "title": "TRANSP",
+    "kind": "property",
+    "text": "TRANSP:OPAQUE",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.3.1-a",
+    "section": "3.8.3.1",
+    "title": "TZID",
+    "kind": "property",
+    "text": "TZID:America/New_York",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.3.1-b",
+    "section": "3.8.3.1",
+    "title": "TZID",
+    "kind": "property",
+    "text": "TZID:America/Los_Angeles",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.3.1-c",
+    "section": "3.8.3.1",
+    "title": "TZID",
+    "kind": "property",
+    "text": "TZID:/example.org/America/New_York",
+    "valid": true,
+    "errata": "",
+    "comment": "A globally unique TZID (prefixed with '/')."
+  },
+  {
+    "id": "rfc5545-3.8.3.2-a",
+    "section": "3.8.3.2",
+    "title": "TZNAME",
+    "kind": "property",
+    "text": "TZNAME:EST",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.3.2-b",
+    "section": "3.8.3.2",
+    "title": "TZNAME",
+    "kind": "property",
+    "text": "TZNAME;LANGUAGE=fr-CA:HNE",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.3.3-a",
+    "section": "3.8.3.3",
+    "title": "TZOFFSETFROM",
+    "kind": "property",
+    "text": "TZOFFSETFROM:-0500",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.3.3-b",
+    "section": "3.8.3.3",
+    "title": "TZOFFSETFROM",
+    "kind": "property",
+    "text": "TZOFFSETFROM:+1345",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.3.4-a",
+    "section": "3.8.3.4",
+    "title": "TZOFFSETTO",
+    "kind": "property",
+    "text": "TZOFFSETTO:-0400",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.3.4-b",
+    "section": "3.8.3.4",
+    "title": "TZOFFSETTO",
+    "kind": "property",
+    "text": "TZOFFSETTO:+1245",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.3.5-a",
+    "section": "3.8.3.5",
+    "title": "TZURL",
+    "kind": "property",
+    "text": "TZURL:http://timezones.example.org/tz/America-Los_Angeles.ics",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.1-a",
+    "section": "3.8.4.1",
+    "title": "ATTENDEE (to-do)",
+    "kind": "property",
+    "text": "ATTENDEE;MEMBER=\"mailto:DEV-GROUP@example.com\":\r\n mailto:joecool@example.com\r\nATTENDEE;DELEGATED-FROM=\"mailto:immud@example.com\":\r\n mailto:ildoit@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.1-b",
+    "section": "3.8.4.1",
+    "title": "ATTENDEE (multiple attendees)",
+    "kind": "property",
+    "text": "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=TENTATIVE;CN=Henry\r\n Cabot:mailto:hcabot@example.com\r\nATTENDEE;ROLE=REQ-PARTICIPANT;DELEGATED-FROM=\"mailto:bob@\r\n example.com\";PARTSTAT=ACCEPTED;CN=Jane Doe:mailto:jdoe@\r\n example.com",
+    "valid": true,
+    "errata": "",
+    "comment": "Unfolding removes the line break and the single fold space, so the first CN becomes 'HenryCabot'. The second line's fold falls inside a quoted parameter value."
+  },
+  {
+    "id": "rfc5545-3.8.4.1-c",
+    "section": "3.8.4.1",
+    "title": "ATTENDEE (DIR)",
+    "kind": "property",
+    "text": "ATTENDEE;CN=John Smith;DIR=\"ldap://example.com:6666/o=ABC%\r\n 20Industries,c=US???(cn=Jim%20Dolittle)\":mailto:jimdo@\r\n example.com",
+    "valid": true,
+    "errata": "",
+    "comment": "The fold splits the percent-encoding '%20'."
+  },
+  {
+    "id": "rfc5545-3.8.4.1-d",
+    "section": "3.8.4.1",
+    "title": "ATTENDEE (delegation)",
+    "kind": "property",
+    "text": "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=TENTATIVE;DELEGATED-FROM=\r\n \"mailto:iamboss@example.com\";CN=Henry Cabot:mailto:hcabot@\r\n example.com\r\nATTENDEE;ROLE=NON-PARTICIPANT;PARTSTAT=DELEGATED;DELEGATED-TO=\r\n \"mailto:hcabot@example.com\";CN=The Big Cheese:mailto:iamboss\r\n @example.com\r\nATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=Jane Doe\r\n :mailto:jdoe@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": "The last line's continuation starts with ':'."
+  },
+  {
+    "id": "rfc5545-3.8.4.1-e",
+    "section": "3.8.4.1",
+    "title": "ATTENDEE (SENT-BY)",
+    "kind": "property",
+    "text": "ATTENDEE;SENT-BY=mailto:jan_doe@example.com;CN=John Smith:\r\n mailto:jsmith@example.com",
+    "valid": false,
+    "errata": "2516",
+    "comment": "The SENT-BY value is not quoted. The sentbyparam ABNF requires DQUOTEs. Erratum 2516 adds them."
+  },
+  {
+    "id": "rfc5545-3.8.4.1-e-corrected",
+    "section": "3.8.4.1",
+    "title": "ATTENDEE (SENT-BY)",
+    "kind": "property",
+    "text": "ATTENDEE;SENT-BY=\"mailto:jan_doe@example.com\";CN=John Smith:\r\n mailto:jsmith@example.com",
+    "valid": true,
+    "errata": "2516",
+    "comment": "Text of rfc5545-3.8.4.1-e with Verified erratum 2516 applied."
+  },
+  {
+    "id": "rfc5545-3.8.4.2-a",
+    "section": "3.8.4.2",
+    "title": "CONTACT",
+    "kind": "property",
+    "text": "CONTACT:Jim Dolittle\\, ABC Industries\\, +1-919-555-1234",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.2-b",
+    "section": "3.8.4.2",
+    "title": "CONTACT (ALTREP LDAP)",
+    "kind": "property",
+    "text": "CONTACT;ALTREP=\"ldap://example.com:6666/o=ABC%20Industries\\,\r\n c=US???(cn=Jim%20Dolittle)\":Jim Dolittle\\, ABC Industries\\,\r\n +1-919-555-1234",
+    "valid": false,
+    "errata": "7691",
+    "comment": "The quoted ALTREP value contains '\\,'. Backslash escapes do not apply inside parameter values, so the URI contains a literal backslash and is not a valid URI. Erratum 7691 removes the backslash."
+  },
+  {
+    "id": "rfc5545-3.8.4.2-b-corrected",
+    "section": "3.8.4.2",
+    "title": "CONTACT (ALTREP LDAP)",
+    "kind": "property",
+    "text": "CONTACT;ALTREP=\"ldap://example.com:6666/o=ABC%20Industries,\r\n c=US???(cn=Jim%20Dolittle)\":Jim Dolittle\\, ABC Industries\\,\r\n +1-919-555-1234",
+    "valid": true,
+    "errata": "7691",
+    "comment": "Text of rfc5545-3.8.4.2-b with Verified erratum 7691 applied."
+  },
+  {
+    "id": "rfc5545-3.8.4.2-c",
+    "section": "3.8.4.2",
+    "title": "CONTACT (ALTREP CID)",
+    "kind": "property",
+    "text": "CONTACT;ALTREP=\"CID:part3.msg970930T083000SILVER@example.com\":\r\n Jim Dolittle\\, ABC Industries\\, +1-919-555-1234",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.2-d",
+    "section": "3.8.4.2",
+    "title": "CONTACT (ALTREP http)",
+    "kind": "property",
+    "text": "CONTACT;ALTREP=\"http://example.com/pdi/jdoe.vcf\":Jim\r\n  Dolittle\\, ABC Industries\\, +1-919-555-1234",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.3-a",
+    "section": "3.8.4.3",
+    "title": "ORGANIZER",
+    "kind": "property",
+    "text": "ORGANIZER;CN=John Smith:mailto:jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.3-b",
+    "section": "3.8.4.3",
+    "title": "ORGANIZER (DIR)",
+    "kind": "property",
+    "text": "ORGANIZER;CN=JohnSmith;DIR=\"ldap://example.com:6666/o=DC%20Ass\r\n ociates,c=US???(cn=John%20Smith)\":mailto:jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.3-c",
+    "section": "3.8.4.3",
+    "title": "ORGANIZER (SENT-BY)",
+    "kind": "property",
+    "text": "ORGANIZER;SENT-BY=\"mailto:jane_doe@example.com\":\r\n mailto:jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.4-a",
+    "section": "3.8.4.4",
+    "title": "RECURRENCE-ID",
+    "kind": "property",
+    "text": "RECURRENCE-ID;VALUE=DATE:19960401",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.4-b",
+    "section": "3.8.4.4",
+    "title": "RECURRENCE-ID",
+    "kind": "property",
+    "text": "RECURRENCE-ID;RANGE=THISANDFUTURE:19960120T120000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.5-a",
+    "section": "3.8.4.5",
+    "title": "RELATED-TO",
+    "kind": "property",
+    "text": "RELATED-TO:jsmith.part7.19960817T083000.xyzMail@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.5-b",
+    "section": "3.8.4.5",
+    "title": "RELATED-TO",
+    "kind": "property",
+    "text": "RELATED-TO:19960401-080045-4000F192713-0052@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.6-a",
+    "section": "3.8.4.6",
+    "title": "URL",
+    "kind": "property",
+    "text": "URL:http://example.com/pub/calendars/jsmith/mytime.ics",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.4.7-a",
+    "section": "3.8.4.7",
+    "title": "UID",
+    "kind": "property",
+    "text": "UID:19960401T080045Z-4000F192713-0052@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.5.1-a",
+    "section": "3.8.5.1",
+    "title": "EXDATE",
+    "kind": "property",
+    "text": "EXDATE:19960402T010000Z,19960403T010000Z,19960404T010000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.5.2-a",
+    "section": "3.8.5.2",
+    "title": "RDATE",
+    "kind": "property",
+    "text": "RDATE:19970714T123000Z\r\nRDATE;TZID=America/New_York:19970714T083000",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.5.2-b",
+    "section": "3.8.5.2",
+    "title": "RDATE (PERIOD)",
+    "kind": "property",
+    "text": "RDATE;VALUE=PERIOD:19960403T020000Z/19960403T040000Z,\r\n 19960404T010000Z/PT3H",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.5.2-c",
+    "section": "3.8.5.2",
+    "title": "RDATE (DATE list)",
+    "kind": "property",
+    "text": "RDATE;VALUE=DATE:19970101,19970120,19970217,19970421\r\n 19970526,19970704,19970901,19971014,19971128,19971129,19971225",
+    "valid": false,
+    "errata": "2527",
+    "comment": "A comma is missing at the fold, so unfolding produces the bad DATE '1997042119970526'. Erratum 2527 adds the comma."
+  },
+  {
+    "id": "rfc5545-3.8.5.2-c-corrected",
+    "section": "3.8.5.2",
+    "title": "RDATE (DATE list)",
+    "kind": "property",
+    "text": "RDATE;VALUE=DATE:19970101,19970120,19970217,19970421,\r\n 19970526,19970704,19970901,19971014,19971128,19971129,19971225",
+    "valid": true,
+    "errata": "2527",
+    "comment": "Text of rfc5545-3.8.5.2-c with Verified erratum 2527 applied."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-a",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=DAILY;COUNT=10",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-01."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-b",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=DAILY;UNTIL=19971224T000000Z",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-02."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-c",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=DAILY;INTERVAL=2",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-03."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-d",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=DAILY;INTERVAL=10;COUNT=5",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-04."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-e",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19980101T090000\r\nRRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;\r\n BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC has a blank line between DTSTART and RRULE; it is dropped here. The RFC gives an alternative RRULE ('or'); see the next entry. See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-05a."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-f",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19980101T090000\r\nRRULE:FREQ=DAILY;UNTIL=20000131T140000Z;BYMONTH=1",
+    "valid": true,
+    "errata": "",
+    "comment": "The DTSTART line (RFC line 6916) is combined with the alternative RRULE (RFC line 6921). See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-05b."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-g",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=WEEKLY;COUNT=10",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-06."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-h",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=WEEKLY;UNTIL=19971224T000000Z",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-07."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-i",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=WEEKLY;INTERVAL=2;WKST=SU",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-08."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-j",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC gives an alternative RRULE ('or'); see the next entry. See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-09a."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-k",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=WEEKLY;COUNT=10;WKST=SU;BYDAY=TU,TH",
+    "valid": true,
+    "errata": "",
+    "comment": "The DTSTART line (RFC line 6978) is combined with the alternative RRULE (RFC line 6983). See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-09b."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-l",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970901T090000\r\nRRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;\r\n BYDAY=MO,WE,FR",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-10."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-m",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-11."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-n",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970905T090000\r\nRRULE:FREQ=MONTHLY;COUNT=10;BYDAY=1FR",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-12."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-o",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970905T090000\r\nRRULE:FREQ=MONTHLY;UNTIL=19971224T000000Z;BYDAY=1FR",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-13."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-p",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970907T090000\r\nRRULE:FREQ=MONTHLY;INTERVAL=2;COUNT=10;BYDAY=1SU,-1SU",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-14."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-q",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970922T090000\r\nRRULE:FREQ=MONTHLY;COUNT=6;BYDAY=-2MO",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-15."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-r",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970928T090000\r\nRRULE:FREQ=MONTHLY;BYMONTHDAY=-3",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-16."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-s",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-17."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-t",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970930T090000\r\nRRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=1,-1",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-18."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-u",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970910T090000\r\nRRULE:FREQ=MONTHLY;INTERVAL=18;COUNT=10;BYMONTHDAY=10,11,12,\r\n 13,14,15",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-19."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-v",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=TU",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-20."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-w",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970610T090000\r\nRRULE:FREQ=YEARLY;COUNT=10;BYMONTH=6,7",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-21."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-x",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970310T090000\r\nRRULE:FREQ=YEARLY;INTERVAL=2;COUNT=10;BYMONTH=1,2,3",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-22."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-y",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970101T090000\r\nRRULE:FREQ=YEARLY;INTERVAL=3;COUNT=10;BYYEARDAY=1,100,200",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-23."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-z",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970519T090000\r\nRRULE:FREQ=YEARLY;BYDAY=20MO",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-24."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-aa",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970512T090000\r\nRRULE:FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-25."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ab",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970313T090000\r\nRRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=TH",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-26."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ac",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970605T090000\r\nRRULE:FREQ=YEARLY;BYDAY=TH;BYMONTH=6,7,8",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-27."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ad",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nEXDATE;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13",
+    "valid": true,
+    "errata": "",
+    "comment": "DTSTART does not match the rule and is removed by EXDATE. The RFC calls an unsynchronized DTSTART undefined, but the text is syntactically valid. Erratum 5920 (rejected) objected to this. See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-28."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ae",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970913T090000\r\nRRULE:FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-29."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-af",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19961105T090000\r\nRRULE:FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;\r\n BYMONTHDAY=2,3,4,5,6,7,8",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-30."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ag",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970904T090000\r\nRRULE:FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-31."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ah",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970929T090000\r\nRRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-32."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ai",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=HOURLY;INTERVAL=3;UNTIL=19970902T170000Z",
+    "valid": true,
+    "errata": "3883",
+    "comment": "Valid syntax, but UNTIL=19970902T170000Z (13:00 EDT) does not match '9:00 AM to 5:00 PM' or the stated output. Erratum 3883 changes it to 19970902T210000Z. See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-33-uncorrected (as printed)."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ai-corrected",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=HOURLY;INTERVAL=3;UNTIL=19970902T210000Z",
+    "valid": true,
+    "errata": "3883",
+    "comment": "Text of rfc5545-3.8.5.3-ai with Verified erratum 3883 applied. See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-33."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-aj",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=MINUTELY;INTERVAL=15;COUNT=6",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-34."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ak",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=MINUTELY;INTERVAL=90;COUNT=4",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-35."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-al",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40",
+    "valid": true,
+    "errata": "",
+    "comment": "The RFC gives an alternative RRULE ('or'); see the next entry. See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-36a."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-am",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970902T090000\r\nRRULE:FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16",
+    "valid": true,
+    "errata": "",
+    "comment": "The DTSTART line (RFC line 7310) is combined with the alternative RRULE (RFC line 7313). See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-36b."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-an",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970805T090000\r\nRRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-37."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ao",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:19970805T090000\r\nRRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-38."
+  },
+  {
+    "id": "rfc5545-3.8.5.3-ap",
+    "section": "3.8.5.3",
+    "title": "RRULE",
+    "kind": "property",
+    "text": "DTSTART;TZID=America/New_York:20070115T090000\r\nRRULE:FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5",
+    "valid": true,
+    "errata": "",
+    "comment": "See testdata/rfc5545/recur.json case rfc5545-3.8.5.3-39."
+  },
+  {
+    "id": "rfc5545-3.8.6.1-a",
+    "section": "3.8.6.1",
+    "title": "ACTION",
+    "kind": "property",
+    "text": "ACTION:AUDIO",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.6.1-b",
+    "section": "3.8.6.1",
+    "title": "ACTION",
+    "kind": "property",
+    "text": "ACTION:DISPLAY",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.6.2-a",
+    "section": "3.8.6.2",
+    "title": "REPEAT",
+    "kind": "property",
+    "text": "REPEAT:4\r\nDURATION:PT5M",
+    "valid": true,
+    "errata": "",
+    "comment": "REPEAT and DURATION shown together."
+  },
+  {
+    "id": "rfc5545-3.8.6.3-a",
+    "section": "3.8.6.3",
+    "title": "TRIGGER",
+    "kind": "property",
+    "text": "TRIGGER:-PT15M",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.6.3-b",
+    "section": "3.8.6.3",
+    "title": "TRIGGER",
+    "kind": "property",
+    "text": "TRIGGER;RELATED=END:PT5M",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.6.3-c",
+    "section": "3.8.6.3",
+    "title": "TRIGGER",
+    "kind": "property",
+    "text": "TRIGGER;VALUE=DATE-TIME:19980101T050000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.7.1-a",
+    "section": "3.8.7.1",
+    "title": "CREATED",
+    "kind": "property",
+    "text": "CREATED:19960329T133000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.7.2-a",
+    "section": "3.8.7.2",
+    "title": "DTSTAMP",
+    "kind": "property",
+    "text": "DTSTAMP:19971210T080000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.7.3-a",
+    "section": "3.8.7.3",
+    "title": "LAST-MODIFIED",
+    "kind": "property",
+    "text": "LAST-MODIFIED:19960817T133000Z",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.7.4-a",
+    "section": "3.8.7.4",
+    "title": "SEQUENCE",
+    "kind": "property",
+    "text": "SEQUENCE:0",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.7.4-b",
+    "section": "3.8.7.4",
+    "title": "SEQUENCE",
+    "kind": "property",
+    "text": "SEQUENCE:2",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.8.1-a",
+    "section": "3.8.8.1",
+    "title": "IANA property",
+    "kind": "property",
+    "text": "DRESSCODE:CASUAL",
+    "valid": true,
+    "errata": "",
+    "comment": "A hypothetical IANA-registered property."
+  },
+  {
+    "id": "rfc5545-3.8.8.1-b",
+    "section": "3.8.8.1",
+    "title": "IANA property",
+    "kind": "property",
+    "text": "NON-SMOKING;VALUE=BOOLEAN:TRUE",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.8.2-a",
+    "section": "3.8.8.2",
+    "title": "X- property",
+    "kind": "property",
+    "text": "X-ABC-MMSUBJ;VALUE=URI;FMTTYPE=audio/basic:http://www.example.\r\n org/mysubj.au",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.8.3-a",
+    "section": "3.8.8.3",
+    "title": "REQUEST-STATUS",
+    "kind": "property",
+    "text": "REQUEST-STATUS:2.0;Success",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.8.3-b",
+    "section": "3.8.8.3",
+    "title": "REQUEST-STATUS",
+    "kind": "property",
+    "text": "REQUEST-STATUS:3.1;Invalid property value;DTSTART:96-Apr-01",
+    "valid": true,
+    "errata": "",
+    "comment": "extdata contains an unescaped ':' (allowed in TEXT)."
+  },
+  {
+    "id": "rfc5545-3.8.8.3-c",
+    "section": "3.8.8.3",
+    "title": "REQUEST-STATUS",
+    "kind": "property",
+    "text": "REQUEST-STATUS:2.8; Success\\, repeating event ignored. Scheduled\r\n as a single event.;RRULE:FREQ=WEEKLY\\;INTERVAL=2",
+    "valid": true,
+    "errata": "",
+    "comment": "statdesc has a leading space and an escaped comma. extdata has an escaped semicolon."
+  },
+  {
+    "id": "rfc5545-3.8.8.3-d",
+    "section": "3.8.8.3",
+    "title": "REQUEST-STATUS",
+    "kind": "property",
+    "text": "REQUEST-STATUS:4.1;Event conflict.  Date-time is busy.",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-3.8.8.3-e",
+    "section": "3.8.8.3",
+    "title": "REQUEST-STATUS",
+    "kind": "property",
+    "text": "REQUEST-STATUS:3.7;Invalid calendar user;ATTENDEE:\r\n mailto:jsmith@example.com",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-4-a",
+    "section": "4",
+    "title": "Three-day conference (VEVENT)",
+    "kind": "calendar",
+    "text": "BEGIN:VCALENDAR\r\nPRODID:-//xyz Corp//NONSGML PDA Calendar Version 1.0//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTAMP:19960704T120000Z\r\nUID:uid1@example.com\r\nORGANIZER:mailto:jsmith@example.com\r\nDTSTART:19960918T143000Z\r\nDTEND:19960920T220000Z\r\nSTATUS:CONFIRMED\r\nCATEGORIES:CONFERENCE\r\nSUMMARY:Networld+Interop Conference\r\nDESCRIPTION:Networld+Interop Conference\r\n  and Exhibit\\nAtlanta World Congress Center\\n\r\n Atlanta\\, Georgia\r\nEND:VEVENT\r\nEND:VCALENDAR",
+    "valid": true,
+    "errata": "",
+    "comment": ""
+  },
+  {
+    "id": "rfc5545-4-b",
+    "section": "4",
+    "title": "Group-scheduled meeting with VTIMEZONE",
+    "kind": "calendar",
+    "text": "BEGIN:VCALENDAR\r\nPRODID:-//RDU Software//NONSGML HandCal//EN\r\nVERSION:2.0\r\nBEGIN:VTIMEZONE\r\nTZID:America/New_York\r\nBEGIN:STANDARD\r\nDTSTART:19981025T020000\r\nTZOFFSETFROM:-0400\r\nTZOFFSETTO:-0500\r\nTZNAME:EST\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:19990404T020000\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\nBEGIN:VEVENT\r\nDTSTAMP:19980309T231000Z\r\nUID:guid-1.example.com\r\nORGANIZER:mailto:mrbig@example.com\r\nATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:\r\n mailto:employee-A@example.com\r\nDESCRIPTION:Project XYZ Review Meeting\r\nCATEGORIES:MEETING\r\nCLASS:PUBLIC\r\nCREATED:19980309T130000Z\r\nSUMMARY:XYZ Project Review\r\nDTSTART;TZID=America/New_York:19980312T083000\r\nDTEND;TZID=America/New_York:19980312T093000\r\nLOCATION:1CP Conference Room 4350\r\nEND:VEVENT\r\nEND:VCALENDAR",
+    "valid": true,
+    "errata": "3740",
+    "comment": "Valid syntax. The VTIMEZONE observances start on 1998-10-25 and 1999-04-04, after the 1998-03-12 meeting, so they do not cover it. Erratum 3740 replaces them with RRULE-based 1967/1987 observances. Crosses a page break in the RFC (page footer/header removed)."
+  },
+  {
+    "id": "rfc5545-4-b-corrected",
+    "section": "4",
+    "title": "Group-scheduled meeting with VTIMEZONE",
+    "kind": "calendar",
+    "text": "BEGIN:VCALENDAR\r\nPRODID:-//RDU Software//NONSGML HandCal//EN\r\nVERSION:2.0\r\nBEGIN:VTIMEZONE\r\nTZID:America/New_York\r\nBEGIN:STANDARD\r\nDTSTART:19671029T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU;UNTIL=20061029T060000Z\r\nTZOFFSETFROM:-0400\r\nTZOFFSETTO:-0500\r\nTZNAME:EST\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:19870405T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=4;BYDAY=1SU;UNTIL=20060402T070000Z\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\nBEGIN:VEVENT\r\nDTSTAMP:19980309T231000Z\r\nUID:guid-1.example.com\r\nORGANIZER:mailto:mrbig@example.com\r\nATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:\r\n mailto:employee-A@example.com\r\nDESCRIPTION:Project XYZ Review Meeting\r\nCATEGORIES:MEETING\r\nCLASS:PUBLIC\r\nCREATED:19980309T130000Z\r\nSUMMARY:XYZ Project Review\r\nDTSTART;TZID=America/New_York:19980312T083000\r\nDTEND;TZID=America/New_York:19980312T093000\r\nLOCATION:1CP Conference Room 4350\r\nEND:VEVENT\r\nEND:VCALENDAR",
+    "valid": true,
+    "errata": "3740",
+    "comment": "Text of rfc5545-4-b with Verified erratum 3740 applied."
+  },
+  {
+    "id": "rfc5545-4-c",
+    "section": "4",
+    "title": "Calendar passed in a MIME message (METHOD:xyz)",
+    "kind": "calendar",
+    "text": "BEGIN:VCALENDAR\r\nMETHOD:xyz\r\nVERSION:2.0\r\nPRODID:-//ABC Corporation//NONSGML My Product//EN\r\nBEGIN:VEVENT\r\nDTSTAMP:19970324T120000Z\r\nSEQUENCE:0\r\nUID:uid3@example.com\r\nORGANIZER:mailto:jdoe@example.com\r\nATTENDEE;RSVP=TRUE:mailto:jsmith@example.com\r\nDTSTART:19970324T123000Z\r\nDTEND:19970324T210000Z\r\nCATEGORIES:MEETING,PROJECT\r\nCLASS:PUBLIC\r\nSUMMARY:Calendaring Interoperability Planning Meeting\r\nDESCRIPTION:Discuss how we can test c&s interoperability\\n\r\n using iCalendar and other IETF standards.\r\nLOCATION:LDB Lobby\r\nATTACH;FMTTYPE=application/postscript:ftp://example.com/pub/\r\n conf/bkgrnd.ps\r\nEND:VEVENT\r\nEND:VCALENDAR",
+    "valid": true,
+    "errata": "",
+    "comment": "In the RFC, this calendar is the body of a MIME message with these headers (not included in text): 'TO:jsmith@example.com', 'FROM:jdoe@example.com', 'MIME-VERSION:1.0', 'MESSAGE-ID:<id3@example.com>', 'CONTENT-TYPE:text/calendar; method=\"xyz\"; component=\"VEVENT\"'. METHOD:xyz is a placeholder method name. It is valid as an iana-token but is not registered. Crosses a page break in the RFC (page footer/header removed)."
+  },
+  {
+    "id": "rfc5545-4-d",
+    "section": "4",
+    "title": "To-do with audio alarm",
+    "kind": "calendar",
+    "text": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//ABC Corporation//NONSGML My Product//EN\r\nBEGIN:VTODO\r\nDTSTAMP:19980130T134500Z\r\nSEQUENCE:2\r\nUID:uid4@example.com\r\nORGANIZER:mailto:unclesam@example.com\r\nATTENDEE;PARTSTAT=ACCEPTED:mailto:jqpublic@example.com\r\nDUE:19980415T000000\r\nSTATUS:NEEDS-ACTION\r\nSUMMARY:Submit Income Taxes\r\nBEGIN:VALARM\r\nACTION:AUDIO\r\nTRIGGER:19980403T120000Z\r\nATTACH;FMTTYPE=audio/basic:http://example.com/pub/audio-\r\n files/ssbanner.aud\r\nREPEAT:4\r\nDURATION:PT1H\r\nEND:VALARM\r\nEND:VTODO\r\nEND:VCALENDAR",
+    "valid": false,
+    "errata": "2039",
+    "comment": "TRIGGER defaults to DURATION, so the DATE-TIME value needs VALUE=DATE-TIME. Erratum 2039 adds it. Also (no erratum): the RFC's prose says the alarm fires 'at noon, the day before' the to-do is due. TRIGGER is 1998-04-03 12:00Z, which is 12 days before DUE (1998-04-15)."
+  },
+  {
+    "id": "rfc5545-4-d-corrected",
+    "section": "4",
+    "title": "To-do with audio alarm",
+    "kind": "calendar",
+    "text": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//ABC Corporation//NONSGML My Product//EN\r\nBEGIN:VTODO\r\nDTSTAMP:19980130T134500Z\r\nSEQUENCE:2\r\nUID:uid4@example.com\r\nORGANIZER:mailto:unclesam@example.com\r\nATTENDEE;PARTSTAT=ACCEPTED:mailto:jqpublic@example.com\r\nDUE:19980415T000000\r\nSTATUS:NEEDS-ACTION\r\nSUMMARY:Submit Income Taxes\r\nBEGIN:VALARM\r\nACTION:AUDIO\r\nTRIGGER;VALUE=DATE-TIME:19980403T120000Z\r\nATTACH;FMTTYPE=audio/basic:http://example.com/pub/audio-\r\n files/ssbanner.aud\r\nREPEAT:4\r\nDURATION:PT1H\r\nEND:VALARM\r\nEND:VTODO\r\nEND:VCALENDAR",
+    "valid": true,
+    "errata": "2039",
+    "comment": "Text of rfc5545-4-d with Verified erratum 2039 applied."
+  },
+  {
+    "id": "rfc5545-4-e",
+    "section": "4",
+    "title": "Journal entry",
+    "kind": "calendar",
+    "text": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//ABC Corporation//NONSGML My Product//EN\r\nBEGIN:VJOURNAL\r\nDTSTAMP:19970324T120000Z\r\nUID:uid5@example.com\r\nORGANIZER:mailto:jsmith@example.com\r\nSTATUS:DRAFT\r\nCLASS:PUBLIC\r\nCATEGORIES:Project Report,XYZ,Weekly Meeting\r\nDESCRIPTION:Project xyz Review Meeting Minutes\\n\r\n Agenda\\n1. Review of project version 1.0 requirements.\\n2.\r\n  Definition\r\n of project processes.\\n3. Review of project schedule.\\n\r\n Participants: John Smith\\, Jane Doe\\, Jim Dandy\\n-It was\r\n  decided that the requirements need to be signed off by\r\n  product marketing.\\n-Project processes were accepted.\\n\r\n -Project schedule needs to account for scheduled holidays\r\n  and employee vacation time. Check with HR for specific\r\n  dates.\\n-New schedule will be distributed by Friday.\\n-\r\n Next weeks meeting is cancelled. No meeting until 3/23.\r\nEND:VJOURNAL\r\nEND:VCALENDAR",
+    "valid": true,
+    "errata": "",
+    "comment": "A continuation line after the page break starts with two spaces ('2.' + ' Definition'). Crosses a page break in the RFC (page footer/header removed)."
+  },
+  {
+    "id": "rfc5545-4-f",
+    "section": "4",
+    "title": "Published busy time",
+    "kind": "calendar",
+    "text": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//RDU Software//NONSGML HandCal//EN\r\nBEGIN:VFREEBUSY\r\nORGANIZER:mailto:jsmith@example.com\r\nDTSTART:19980313T141711Z\r\nDTEND:19980410T141711Z\r\nFREEBUSY:19980314T233000Z/19980315T003000Z\r\nFREEBUSY:19980316T153000Z/19980316T163000Z\r\nFREEBUSY:19980318T030000Z/19980318T040000Z\r\nURL:http://www.example.com/calendar/busytime/jsmith.ifb\r\nEND:VFREEBUSY\r\nEND:VCALENDAR",
+    "valid": false,
+    "errata": "4149",
+    "comment": "The VFREEBUSY has no UID or DTSTAMP, which are both REQUIRED. Erratum 4149 adds them."
+  },
+  {
+    "id": "rfc5545-4-f-corrected",
+    "section": "4",
+    "title": "Published busy time",
+    "kind": "calendar",
+    "text": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//RDU Software//NONSGML HandCal//EN\r\nBEGIN:VFREEBUSY\r\nUID:19970901T115957Z-76A912@example.com\r\nDTSTAMP:19970901T120000Z\r\nORGANIZER:mailto:jsmith@example.com\r\nDTSTART:19980313T141711Z\r\nDTEND:19980410T141711Z\r\nFREEBUSY:19980314T233000Z/19980315T003000Z\r\nFREEBUSY:19980316T153000Z/19980316T163000Z\r\nFREEBUSY:19980318T030000Z/19980318T040000Z\r\nURL:http://www.example.com/calendar/busytime/jsmith.ifb\r\nEND:VFREEBUSY\r\nEND:VCALENDAR",
+    "valid": true,
+    "errata": "4149",
+    "comment": "Text of rfc5545-4-f with Verified erratum 4149 applied."
+  },
+  {
+    "id": "rfc5545-8.2.6-a",
+    "section": "8.2.6",
+    "title": "CLASS (registration template example value)",
+    "kind": "property",
+    "text": "CLASS:TOP-SECRET",
+    "valid": true,
+    "errata": "",
+    "comment": "Example for registering a new CLASS value. TOP-SECRET is not registered. It is valid syntax as an iana-token classvalue."
+  }
+]

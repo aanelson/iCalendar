@@ -1,0 +1,151 @@
+[
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_4.ics",
+  "start": "20190613T120000",
+  "end": "20190614",
+  "expected_starts": [
+   "20190613"
+  ],
+  "comment": "test_issue_4.py::test_between: between((2019,6,13,12,0,0), (2019,6,14)) returns exactly 1 event whose DTSTART is DATE 2019-06-13 (all-day weekly event; the window overlaps it)"
+ },
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_4.ics",
+  "start": "20190613",
+  "end": "20190614",
+  "expected_starts": [
+   "20190613"
+  ],
+  "comment": "test_issue_4.py::test_at: at((2019,6,13)) (= that whole day) returns exactly 1 event with DTSTART DATE 2019-06-13"
+ },
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_20_exdate_ignored.ics",
+  "start": null,
+  "end": null,
+  "expected_starts": [
+   "20191029",
+   "20191112",
+   "20191210",
+   "20200107",
+   "20200114",
+   "20200121",
+   "20200128"
+  ],
+  "comment": "test_issue_20_exdate_ignored.py: all() yields exactly 7 events, one on each of these dates (only the dates are asserted, not the times); the EXDATEs 20191015T141500Z ... 20191231T151500Z must not occur and UNTIL ends one second before the February occurrence"
+ },
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_62_moved_event.ics",
+  "start": "20211201",
+  "end": "20220101",
+  "expected_starts": [
+   "20211217"
+  ],
+  "comment": "test_issue_62_moved_event.py: at((2021,12)) has exactly 1 event, on 2021-12-17 (RECURRENCE-ID 20211231T213000 Europe/Berlin moved to DTSTART 20211217T213000); nothing on 2021-12-31; dates only"
+ },
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_62_moved_event_2.ics",
+  "start": "20230801",
+  "end": "20230901",
+  "expected_starts": [
+   "20230808",
+   "20230810",
+   "20230814",
+   "20230816",
+   "20230822",
+   "20230824"
+  ],
+  "comment": "test_issue_62_moved_event.py: at((2023,8)) has exactly 6 events, one on each date: 'Datetime' (Australia/Sydney) on 08, 14 (moved from 15), 22 and 'All Day' on 10, 16 (moved from 17), 24; nothing on 15 or 17; dates only"
+ },
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_148_edge_case_1.ics",
+  "start": null,
+  "end": null,
+  "expected_starts": [
+   "20240701",
+   "20240729"
+  ],
+  "comment": "test_issue_148_ignored_exdate_in_higher_sequence.py::test_edge_case_1: all() has exactly 2 events (DATE values 2024-07-01 and 2024-07-29); the edited instance on 2024-07-02 must NOT appear (the series with higher SEQUENCE carries EXDATE 20240715)"
+ },
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_148_edge_case_2.ics",
+  "start": null,
+  "end": null,
+  "expected_starts": [
+   "20240701",
+   "20240702",
+   "20240729"
+  ],
+  "comment": "test_issue_148_ignored_exdate_in_higher_sequence.py::test_edge_case_2: all() has exactly 3 events (DATE values), including the modified instance (RECURRENCE-ID 20240715 moved to 20240702)"
+ },
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_197_rfc5545_examples.ics",
+  "start": "19970902",
+  "end": "19970903",
+  "summary_contains": "3 hours",
+  "expected_starts": [
+   "19970902T090000",
+   "19970902T120000"
+  ],
+  "comment": "test_issue_197_rfc5545_examples.py::test_rfc5545_example_1_every_3_hours: at('19970902'), events whose SUMMARY contains '3 hours'; wall-clock America/New_York (DTSTART;TZID=America/New_York). RRULE:FREQ=HOURLY;INTERVAL=3;UNTIL=19970902T170000Z - only 2 instances because 17:00Z is 13:00 EDT (the RFC 5545 text lists 09:00, 12:00, 15:00)"
+ },
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_197_rfc5545_examples.ics",
+  "start": "19970902",
+  "end": "19970903",
+  "summary_contains": "15 minutes",
+  "expected_starts": [
+   "19970902T090000",
+   "19970902T091500",
+   "19970902T093000",
+   "19970902T094500",
+   "19970902T100000",
+   "19970902T101500"
+  ],
+  "comment": "test_rfc5545_example_2_every_15_minutes: SUMMARY contains '15 minutes'; wall-clock America/New_York (DTSTART;TZID=America/New_York); RRULE:FREQ=MINUTELY;INTERVAL=15;COUNT=6"
+ },
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_197_rfc5545_examples.ics",
+  "start": "19970902",
+  "end": "19970903",
+  "summary_contains": "hour and a half",
+  "expected_starts": [
+   "19970902T090000",
+   "19970902T103000",
+   "19970902T120000",
+   "19970902T133000"
+  ],
+  "comment": "test_rfc5545_example_3_every_hour_and_a_half: SUMMARY contains 'hour and a half'; wall-clock America/New_York (DTSTART;TZID=America/New_York); RRULE:FREQ=MINUTELY;INTERVAL=90;COUNT=4"
+ },
+ {
+  "calendar": "ics/recurring_ical_events/test/calendars/issue_197_rfc5545_examples.ics",
+  "start": "19970902",
+  "end": "19970903",
+  "summary_contains": "20 minutes",
+  "expected_starts": [
+   "19970902T090000",
+   "19970902T092000",
+   "19970902T094000",
+   "19970902T100000",
+   "19970902T102000",
+   "19970902T104000",
+   "19970902T110000",
+   "19970902T112000",
+   "19970902T114000",
+   "19970902T120000",
+   "19970902T122000",
+   "19970902T124000",
+   "19970902T130000",
+   "19970902T132000",
+   "19970902T134000",
+   "19970902T140000",
+   "19970902T142000",
+   "19970902T144000",
+   "19970902T150000",
+   "19970902T152000",
+   "19970902T154000",
+   "19970902T160000",
+   "19970902T162000",
+   "19970902T164000"
+  ],
+  "comment": "test_rfc5545_example_4_every_20_minutes: SUMMARY contains '20 minutes'; wall-clock America/New_York (DTSTART;TZID=America/New_York); RRULE:FREQ=DAILY;BYHOUR=9..16;BYMINUTE=0,20,40 -> 24 instances on 1997-09-02 (the source builds this list with range(9,17) x [0,20,40])"
+ }
+]
