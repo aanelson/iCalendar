@@ -34,7 +34,12 @@ jobs:
           go-version-file: ${{ matrix.version-file }}
           cache: false # no dependencies, and the tests build in seconds
       - run: go version
-      - run: go test -race ./...
+      - run: go test ./...
+      - name: go test -race
+        # -short skips the tests that time themselves (TestHostileFeeds and
+        # TestHostileInputsAreLinear), which the race detector slows past
+        # their limits; the step above runs them.
+        run: go test -race -short ./...
       - name: Check the fixture suites ran
         # The corpus and vector tests skip themselves when their testdata is
         # missing, which would pass silently. A top-level skip means that
@@ -66,4 +71,4 @@ jobs:
         run: go mod tidy -diff
       - run: go vet ./...
       - name: staticcheck
-        run: go run honnef.co/go/tools/cmd/staticcheck@2026.2.1 ./...
+        run: go run honnef.co/go/tools/cmd/staticcheck@2026.2.2 ./...
