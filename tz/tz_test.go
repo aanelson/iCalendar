@@ -3,6 +3,9 @@ package tz
 import (
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -165,12 +168,17 @@ func TestLoad(t *testing.T) {
 		"america/new_york",
 		"/mozilla.org/20050126_1/America/New_York",
 		"/softwarestudio.org/Olson_20011030_5/America/New_York",
+		"/America/New_York",
+		"/./America/New_York",
 		"Eastern Standard Time",
 	} {
 		loc, err := Load(tzid)
 		if err != nil {
 			t.Errorf("Load(%q): %v", tzid, err)
 			continue
+		}
+		if strings.HasPrefix(loc.String(), ".") {
+			t.Errorf("Load(%q) is named %q", tzid, loc)
 		}
 		at := time.Date(2024, 7, 1, 12, 0, 0, 0, time.UTC)
 		if _, off := at.In(loc).Zone(); off != func() int { _, o := at.In(ny).Zone(); return o }() {
@@ -187,9 +195,51 @@ func TestLoad(t *testing.T) {
 			t.Errorf("Load(%q) offset %d, want %d", tzid, off, want)
 		}
 	}
-	for _, tzid := range []string{"", "Local", "Nowhere/Special", "(UTC-05:00) Eastern Time (US & Canada)", "../../etc/passwd", "/etc/localtime", "localtime", "posix/localtime", "LocalTime", "UTC+15", "GMT-04:75", "UTCX"} {
+	for _, tzid := range []string{"", "Local", "Nowhere/Special", "(UTC-05:00) Eastern Time (US & Canada)", "../../etc/passwd", "/etc/localtime", "localtime", "posix/localtime", "LocalTime", "/usr/share/zoneinfo/localtime", "/", "//", `"/"`, "UTC+15", "GMT-04:75", "UTCX"} {
 		if _, err := Load(tzid); !errors.Is(err, ErrUnknownZone) {
 			t.Errorf("Load(%q) = %v, want ErrUnknownZone", tzid, err)
+		}
+	}
+}
+
+// Debian links /usr/share/zoneinfo/localtime to the host's zone, which a
+// calendar can't mean. Go reads ZONEINFO once per process, so a child
+// process gets a zoneinfo directory laid out that way.
+func TestLoadRefusesHostZone(t *testing.T) {
+	if os.Getenv("TZ_TEST_CHILD") == "1" {
+		for _, tzid := range []string{"localtime", "LOCALTIME", "/etc/localtime", "/x.org/localtime"} {
+			if loc, err := Load(tzid); err == nil {
+				fmt.Printf("Load(%q) = %v\n", tzid, loc)
+			}
+		}
+		if _, err := Load("Asia/Kolkata"); err != nil {
+			fmt.Println("the zoneinfo directory isn't in use:", err)
+		}
+		return
+	}
+	zone, err := os.ReadFile("/usr/share/zoneinfo/Asia/Kolkata")
+	if err != nil {
+		t.Skip("no zoneinfo directory:", err)
+	}
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "Asia"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"localtime", "Asia/Kolkata"} {
+		if err := os.WriteFile(filepath.Join(dir, name), zone, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=^TestLoadRefusesHostZone$")
+	cmd.Env = append(os.Environ(), "TZ_TEST_CHILD=1", "ZONEINFO="+dir)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	// Only the child's own lines: a coverage build adds its own.
+	for line := range strings.Lines(string(out)) {
+		if strings.HasPrefix(line, "Load(") || strings.HasPrefix(line, "the zoneinfo") {
+			t.Error(strings.TrimSpace(line))
 		}
 	}
 }

@@ -45,27 +45,33 @@ it.
 ## Why not the existing Go libraries
 
 Two audits done for the consuming app tested the Go options against
-hostile and real-world input. Their findings drove these decisions:
+hostile and real-world input. Their findings drove these decisions, and
+[`testdata/compare`](../testdata/compare) re-measures each row against
+golang-ical v0.3.7, emersion/go-ical and rrule-go v1.8.2 (last run
+2026-10-11; results in `testdata/compare/logs`):
 
 | Problem found | In | Response here |
 |---|---|---|
 | Panics on truncated or malformed lines | emersion/go-ical | Hand-written byte scanner; fuzzed (`FuzzReader`, `FuzzDecode`) |
 | Quadratic time on a long parameter value (1 MB → 25 s) | emersion/go-ical | Values are sub-slices of the line; 1 MiB parameter decodes in ms (`TestHostileFeeds`) |
-| Quadratic memory on many parameters (5 MB line → 4 min, 56 GB) | arran4/golang-ical | No per-parameter copy; `TestHostileInputsAreLinear` checks 1 vs 4 MiB scaling |
+| Quadratic time and allocation on many parameters or many parameter values (a 5 MiB line: 4 min, 9.8 TB allocated) | arran4/golang-ical | No per-parameter copy; `TestHostileInputsAreLinear` checks 1 vs 4 MiB scaling |
 | Regexes on every name and value | arran4/golang-ical | Byte loops; ~740 MB/s line scanning, ~290 MB/s full tree |
-| Empty or cut-off feed parses as success with 0 events | both | Missing `END:VCALENDAR` wraps `io.ErrUnexpectedEOF`, also in lenient mode |
+| Empty input, or a feed missing `END:VCALENDAR`, is a silent success; every truncation is a bare `io.EOF` | golang-ical; emersion/go-ical | Missing `END:VCALENDAR` wraps `io.ErrUnexpectedEOF`, also in lenient mode; input that isn't a calendar is an error |
 | `SUMMARY:Dinner, drinks` → `"Dinner"` | emersion/go-ical | Values stay raw; `Text()` never splits, `Texts()` always does |
 | Floating times and dates read in `time.Local` | arran4/golang-ical | `time.Local` is never read |
-| VTIMEZONE ignored; `TZID=Eastern Standard Time` fails | both | VTIMEZONE compiled to a real `*time.Location`; CLDR Windows table |
-| `time.LoadLocation` on every property (50% of CPU) | both | Zone lookups cached, failures included |
+| VTIMEZONE ignored (both); `TZID=Eastern Standard Time` fails (emersion/go-ical, and golang-ical without its `WithWindowsTimezoneMapping` option) | both | VTIMEZONE compiled to a real `*time.Location`; CLDR Windows table |
+| `time.LoadLocation` on every property (70–76% of CPU reading 20,000 zoned events) | both | Zone lookups cached, failures included |
 | `DURATION:P1D` treated as 24 hours | emersion/go-ical | Nominal and exact parts kept apart |
 | Lowercase names fail the whole feed | arran4/golang-ical | Names are case-insensitive (§2) |
-| Writer doesn't fold, or splits UTF-8 | both / ical.js | Folds at 75 octets on rune boundaries |
+| Writer doesn't fold (emersion/go-ical) or writes LF line ends by default (golang-ical) | both | Folds at 75 octets on rune boundaries, always CRLF |
+| Writer lets a CR or LF start a new line: a lone CR in a value (golang-ical), a CRLF in a parameter (emersion/go-ical) | both | TEXT escaped, parameters RFC 6868-encoded, other control characters refused |
+| A time in a spring-forward gap goes back an hour (`02:30` → 01:30 EST, not 03:30 EDT) | all three | §3.3.5 resolution in `civil.DateTime.In`; erratum 4271 for recurrences |
 | rrule-go walks from DTSTART on every query | teambition/rrule-go | Seeks to the window (~1 µs for a month of a 1990 daily series) |
 | rrule-go loops on `FREQ=HOURLY;INTERVAL=24;BYHOUR=11` | teambition/rrule-go | Static check plus a proven termination bound |
 | rrule-go duplicates instances for `BYSECOND=0,0` | teambition/rrule-go | Every BYxxx list is a set |
 | rrule-go walks to year 9999 on unmatchable rules | teambition/rrule-go | Detected up front, or bounded and remembered |
-| rrule-go's iterator mutates its rule | teambition/rrule-go | Rules are values; iterators hold their own state |
+| rrule-go's iterator mutates its rule (a data race when goroutines share one) | teambition/rrule-go | Rules are values; iterators hold their own state |
+| rrule-go silently ends unbounded rules ~292 years after DTSTART | teambition/rrule-go | Iteration runs to year 9999 |
 
 ## Package layout
 
@@ -113,9 +119,9 @@ err = w.WriteLine(line); w.Flush()
 
 - One left-to-right byte scan, no regexes. Names are interned so common
   ones don't allocate.
-- Unfolding accepts CRLF, LF and lone CR, and SPACE or HTAB
-  continuations. It works on bytes, so a fold inside a UTF-8 sequence
-  comes back whole.
+- Unfolding accepts CRLF, LF and lone CR (`Strict`: CRLF only), and SPACE
+  or HTAB continuations. It works on bytes, so a fold inside a UTF-8
+  sequence comes back whole.
 - `MaxLineLength` (default 1 MiB, unfolded) is never recovered from.
 - DQUOTE-quoted parameter values; RFC 6868 `^n ^' ^^` decoded on read and
   encoded on write.
@@ -123,8 +129,9 @@ err = w.WriteLine(line); w.Flush()
 - Lenient mode (the default) recovers and calls `Warn` with a
   `*SyntaxError`: an unparseable line is skipped; a parameter with no `=`,
   text after a closing quote, a quote inside an unquoted value, control
-  characters in parameters, empty lines and stray continuations are read
-  the way most readers read them. `Strict` makes each an error.
+  characters in parameters and values, empty lines and stray continuations
+  are read the way most readers read them. `Strict` makes each an error,
+  and also rejects malformed UTF-8, which lenient mode keeps as it is.
 - The writer folds at 75 octets on rune boundaries, always writes CRLF,
   quotes parameter values containing `,;:`, and rejects names that
   aren't tokens and any control character except HTAB, so no value can
@@ -196,13 +203,19 @@ b, err := cal.Bytes()
 - A stream may hold several VCALENDARs (§3.4); `Decode` returns them in
   turn.
 - **Truncation is never success.** Input that ends inside a component is
-  an error wrapping `io.ErrUnexpectedEOF`, in both modes. Empty input is
-  `io.EOF`. (In strict mode a cut-off final line may be reported first as
-  the malformed line it is.)
+  an error wrapping `io.ErrUnexpectedEOF`, in both modes. Empty or blank
+  input is `io.EOF`; input with content but no VCALENDAR at all (an HTML
+  error page, a vCard, a bare VEVENT) is a `*SyntaxError` wrapping
+  `io.ErrUnexpectedEOF`, as `Parse` reports empty input, so a broken feed
+  doesn't read as an empty one. (A cut-off final line may be reported first as the malformed
+  line it is: in strict mode any line without its CRLF, in both modes a
+  bare `BEGIN:`. It is still an error.)
 - Lenient recoveries at this layer: lines outside a VCALENDAR are
   ignored; an END naming an enclosing component closes the ones in
-  between; an END for nothing open is ignored; a missing PRODID or
-  VERSION is reported.
+  between; an END for nothing open is ignored; parameters or space
+  around a BEGIN or END name, a missing or repeated PRODID or VERSION and
+  a repeated CALSCALE or METHOD are reported. Strict mode also rejects a
+  VCALENDAR with no component (§3.6).
 - Never recovered: truncation, a BEGIN that isn't a name, nesting over
   `MaxDepth`, a line over `MaxLineLength`.
 
@@ -242,10 +255,12 @@ v.Add(d Duration) DateTime        // §3.3.6, below
 ```
 
 It keeps all three forms of §3.3.5 and the TZID text, so it re-encodes
-exactly. A value that a computation produced (`Add`, or an occurrence
-from the `Expander`) also remembers its exact instant, because the wall
-clock and TZID alone can't say which of two repeated 01:30s it is: one
-hour after the first 01:30 of a fall-back night is the second. Lenient reading accepts an 8-digit value without `VALUE=DATE`, a
+exactly. A value that a computation produced (`Add`, `NewDateTime`, or an
+occurrence from the `Expander`) also remembers its exact instant, because
+the wall clock and TZID alone can't say which of two repeated 01:30s it
+is: one hour after the first 01:30 of a fall-back night is the second.
+Since a TZID's wall clock names the first, a setter writes such a value in
+UTC. Lenient reading accepts an 8-digit value without `VALUE=DATE`, a
 time without seconds (`19970701T1300Z`), and a DATE with a `Z`
 (`20131210Z`), all seen in real feeds.
 
@@ -266,11 +281,15 @@ A TZID resolves through the calendar (`Calendar` is a `tz.Resolver`):
    - a Windows ID (`Eastern Standard Time`) through CLDR's
      `windowsZones` (v49, 142 IDs, deprecated IANA aliases mapped to
      current names), generated by `tz/internal/gen`;
-   - a globally unique TZID (`/mozilla.org/20050126_1/America/New_York`):
-     leading segments are dropped until an IANA name loads;
+   - a globally unique TZID (`/mozilla.org/20050126_1/America/New_York`,
+     `/Europe/Stockholm`): leading segments are dropped until an IANA name
+     loads;
    - a fixed offset (`UTC-04:00`, `GMT+0530`), which names its zone exactly.
 3. Otherwise an error wrapping `tz.ErrUnknownZone`. `Load` never guesses,
-   and refuses `Local` and anything path-like.
+   and refuses `Local`, `localtime` (which Debian links to the host's
+   zone) and anything path-like. A value whose TZID doesn't resolve is
+   never placed at a guessed instant: the accessor and the `Expander`
+   report the error, and the `Expander` drops what it can't place.
 
 **Compiling a VTIMEZONE** (`tz.Compile`) expands each STANDARD and
 DAYLIGHT observance with `recur` (DTSTART, RRULEs, RDATEs, on the
@@ -355,9 +374,11 @@ day, walked without being materialized, so a dense period (every second
 of a year) costs no memory; BYSETPOS indexes into the product directly.
 
 Every BYxxx part means something for every frequency, so rules that break
-a MUST NOT still expand predictably: an N/A day-level part acts as a
-limit, and a numbered BYDAY outside MONTHLY/YEARLY loses its number (as
-in dateutil).
+a MUST NOT still expand predictably: an N/A day-level part limits the
+period's days and replaces the DTSTART default it would otherwise get
+(`FREQ=WEEKLY;BYMONTHDAY=23` is every 23rd, not Sundays that are the
+23rd), and a numbered BYDAY outside MONTHLY/YEARLY loses its number (as in
+dateutil).
 
 ### Semantics settled by the vectors
 
@@ -371,9 +392,11 @@ libical, ical.js and ical.net, which agree with each other:
 - **Missing parts come from DTSTART** (§3.3.10). With no day-level part,
   YEARLY takes DTSTART's month and day, MONTHLY its day, WEEKLY its
   weekday. **YEARLY with BYMONTHDAY but no BYMONTH takes DTSTART's
-  month**, and **YEARLY with BYWEEKNO but no BYDAY takes DTSTART's
-  weekday** (libical, ical.js, ical.net; dateutil expands to every month
-  and every day of the week).
+  month** (unless BYWEEKNO or BYYEARDAY already places the day in the
+  year), and **YEARLY with BYWEEKNO but no BYDAY takes DTSTART's
+  weekday** (unless BYMONTHDAY or BYYEARDAY already picks the day)
+  (libical, ical.js, ical.net; dateutil expands to every month and every
+  day of the week).
 - **With BYWEEKNO, YEARLY periods are week-numbering years**, so INTERVAL
   counts the years the weeks belong to (libical, ical.net).
 - **A numbered BYDAY in YEARLY counts within each month when BYMONTH is
@@ -385,7 +408,9 @@ libical, ical.js and ical.net, which agree with each other:
   "MUST be ignored").
 - **UNTIL is inclusive and compared in its own form**: DATE against the
   date (a DATE UNTIL on a timed series includes that whole day), floating
-  against the wall clock, UTC against the instant.
+  against the wall clock, UTC against the instant. A gap time past a UTC
+  UNTIL doesn't end the rule, since the wall-clock times after it can
+  still resolve to before UNTIL.
 - **Duplicates count once**; a `0MO` BYDAY entry is dropped (ical.net).
 - **An EXRULE is the rule alone**: DTSTART neither counts toward its COUNT
   nor is excluded unless the EXRULE generates it (dateutil). An EXRULE
@@ -481,9 +506,10 @@ for occ, err := range cal.Occurrences(from, to) { … } // the zero Expander
 - **RANGE=THISANDFUTURE** *(planned)*: such overrides currently apply to
   their own instance only.
 - **End times**: DTEND gives every instance the same exact duration,
-  DURATION the same nominal one (§3.8.5.3); an RDATE PERIOD has its own.
-  With neither, a DATE start lasts one day and a DATE-TIME start zero
-  (§3.6.1).
+  DURATION the same nominal one (§3.8.5.3); an RDATE PERIOD has its own,
+  unless it doesn't end after it starts (§3.3.9), which is reported and
+  falls back to the series' length. With neither, a DATE start lasts one
+  day and a DATE-TIME start zero (§3.6.1).
 - **EXDATE as a DATE on a timed series** (forbidden by the RFC, written by
   some producers) excludes every instance on that day.
 - **RDATE and EXDATE in another zone** are matched as instants
@@ -528,15 +554,18 @@ doesn't need it to round-trip, which is why it can come later.
 | Suite | What it checks | Status |
 |---|---|---|
 | RFC recurrence examples | All 43 §3.8.5.3 cases, independently brute-force checked when transcribed | 43 / 43 |
-| Third-party recurrence vectors | 1,217 from dateutil, libical, ical.js, ical.net, sabre/vobject, rrule.js, rust-rrule | all pass; 197 skipped for non-5545 extensions (BYEASTER, RSCALE); 28 documented differences |
+| Third-party recurrence vectors | 1,217 from dateutil, libical, ical.js, ical.net, sabre/vobject, rrule.js, rust-rrule | 992 match; 28 documented differences; 197 skipped: 73 use extensions (BYEASTER, RSCALE, SKIP), 124 combine parts RFC 5545 forbids |
 | Seek ≡ walk | `Between` vs. a full walk on 7,000+ windows, with and without a cache | pass |
-| Corpus | 2,139 `.ics` files from 9 projects and the RFC: no panic or hang; decode → encode → decode identical; valid folding; every event expands | 2,045 decode; the 94 rejected have no VCALENDAR (fragments, vCards, fuzz junk) or are truncated |
+| Corpus | 2,139 `.ics` files from 9 projects and the RFC: no panic or hang; decode → encode → decode identical; valid folding; every event expands without panicking | 2,045 decode; the 94 rejected have no VCALENDAR (fragments, vCards, fuzz junk) or are truncated. 618 per-event expansion errors, all bad input: 512 events lack the DTSTART §3.6.1 requires, the rest are malformed values, unknown TZIDs with no VTIMEZONE, or RSCALE |
 | RFC examples | 222 property lines and 26 components from `examples.json` | pass |
+| RFC conformance | 134 tests in `conformance_*_test.go`, each case citing the RFC 5545 / 6868 sentence it checks, with expectations worked out from the RFC text rather than the code: content lines and framing, every value type, components, VTIMEZONE (the RFC's own zones, onset by onset), TZID resolution under three host zones, occurrences, RRULE grammar and every §3.3.10 MUST | pass; 131 skipped as `KNOWN GAP`, almost all §3.6/§3.8 property rules that only the planned schema validation will report |
+| Independent RRULE reference | A naive §3.3.10 implementation sharing no code with `recur`, differentially tested against `Set.Between`, `Rule.Between` (seeking, with and without a cache) and zoned `Set.Times` near real DST changes | 3,000 rules + 1,000 zoned sets per run (`-short`: a tenth); 300,000 + 100,000 with `-recur.conformance=300000`: no mismatches |
 | recurring-ical-events | 11 calendar-level occurrence expectations (overrides, SEQUENCE, EXDATE) | 11 / 11 |
 | VTIMEZONE | compiled zones vs. IANA, hour by hour | pass |
-| Fuzzing | `FuzzReader`, `FuzzDecode`, `FuzzRule` | clean (minutes each) |
+| Fuzzing | `FuzzReader`, `FuzzDecode`, `FuzzRule` | clean (4 min each: 15M, 13M, 19M executions) |
 | Independent review | A second pass over the engine and expander, with a 40,000-rule randomized differential run, found 9 bugs (DST-gap ordering, instants vs. wall clock for RDATE/EXDATE, an all-day window edge, EXRULE counting, a slow-to-prove empty BYSETPOS, …) | all fixed, each with a regression test |
 | Hostile input | 1 MiB parameter, 5 MiB of parameters, 1M comma values | linear |
+| Comparison | `testdata/compare` (a nested module): the same RFC-derived probes, hostile inputs and corpus against golang-ical, emersion/go-ical and rrule-go, each probe in its own subprocess with a timeout | this library: no wrong value, panic or hang; golang-ical fails 12 probes (10 with its options), emersion/go-ical 19, rrule-go 7 |
 
 The third-party fixtures are a nested Go module (`testdata/thirdparty`),
 so they're excluded from the library's module zip and users never download

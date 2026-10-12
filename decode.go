@@ -38,7 +38,9 @@ const (
 // VCALENDAR are ignored. What it never recovers from is losing data
 // silently: input that ends inside a component is an error wrapping
 // io.ErrUnexpectedEOF, never a shorter calendar, and so is a line over
-// MaxLineLength or nesting deeper than MaxDepth.
+// MaxLineLength or nesting deeper than MaxDepth. Input with content but no
+// VCALENDAR at all (an HTML error page, a vCard) is an error too, not an
+// empty stream.
 //
 // Set the fields before the first call to Decode.
 type Decoder struct {
@@ -54,8 +56,10 @@ type Decoder struct {
 	// DefaultMaxDepth.
 	MaxDepth int
 
-	src io.Reader
-	r   *contentline.Reader
+	src     io.Reader
+	r       *contentline.Reader
+	found   bool // a BEGIN:VCALENDAR has been read
+	skipped bool // content was skipped before it
 }
 
 // NewDecoder returns a decoder reading from r.
@@ -84,13 +88,19 @@ func Parse(r io.Reader) (*Calendar, error) {
 }
 
 // Decode reads the next VCALENDAR. It returns io.EOF, unwrapped, when the
-// input holds no further calendar.
+// input holds no further calendar: at once for empty or blank input, but
+// input that held content and no calendar at all is a *SyntaxError wrapping
+// io.ErrUnexpectedEOF, as Parse reports empty input.
 func (d *Decoder) Decode() (*Calendar, error) {
 	if d.r == nil {
 		d.r = contentline.NewReader(d.src)
 		d.r.Strict = d.Strict
-		if d.Warn != nil {
-			d.r.Warn = func(err error) { d.Warn(d.wrap(err)) }
+		d.r.Warn = func(err error) {
+			// A blank line is no more content than empty input is.
+			d.skipped = d.skipped || !d.found && !errors.Is(err, contentline.ErrEmptyLine)
+			if d.Warn != nil {
+				d.Warn(d.wrap(err))
+			}
 		}
 		d.r.MaxLineLength = d.MaxLineLength
 	}
@@ -104,15 +114,23 @@ func (d *Decoder) Decode() (*Calendar, error) {
 	for {
 		l, err := d.r.ReadLine()
 		if err == io.EOF {
+			if d.skipped && !d.found {
+				return nil, &SyntaxError{Line: 1, Msg: "no VCALENDAR in the input", Err: io.ErrUnexpectedEOF}
+			}
 			return nil, io.EOF
 		}
 		if err != nil {
 			return nil, d.wrap(err)
 		}
 		if l.Name == "BEGIN" && strings.EqualFold(strings.TrimSpace(l.Value), "VCALENDAR") {
+			if _, err := d.blockName(l); err != nil {
+				return nil, err
+			}
+			d.found = true
 			start = l.Pos
 			break
 		}
+		d.skipped = d.skipped || !d.found
 		if err := d.deviate(l.Pos, "%s:%s outside a VCALENDAR", l.Name, l.Value); err != nil {
 			return nil, err
 		}
@@ -137,7 +155,10 @@ func (d *Decoder) Decode() (*Calendar, error) {
 		top := stack[len(stack)-1]
 		switch l.Name {
 		case "BEGIN":
-			name := strings.ToUpper(strings.TrimSpace(l.Value))
+			name, err := d.blockName(l)
+			if err != nil {
+				return nil, err
+			}
 			if !isName(name) {
 				return nil, &SyntaxError{Line: l.Pos, Msg: fmt.Sprintf("BEGIN:%s is not a component name", l.Value)}
 			}
@@ -148,7 +169,10 @@ func (d *Decoder) Decode() (*Calendar, error) {
 			top.Children = append(top.Children, c)
 			stack = append(stack, c)
 		case "END":
-			name := strings.ToUpper(strings.TrimSpace(l.Value))
+			name, err := d.blockName(l)
+			if err != nil {
+				return nil, err
+			}
 			if name == top.Name {
 				stack = stack[:len(stack)-1]
 				if len(stack) == 0 {
@@ -191,14 +215,47 @@ func (d *Decoder) Decode() (*Calendar, error) {
 	}
 }
 
-// finish checks the properties RFC 5545 §3.6 requires of every calendar.
+// blockName returns the component name a BEGIN or END line names, in upper
+// case. RFC 5545 §3.4 and §3.6 write these lines as "BEGIN" ":" name, so
+// parameters or space around the name are deviations.
+func (d *Decoder) blockName(l contentline.Line) (string, error) {
+	if len(l.Params) > 0 {
+		if err := d.deviate(l.Pos, "%s:%s has parameters", l.Name, l.Value); err != nil {
+			return "", err
+		}
+	}
+	name := strings.TrimSpace(l.Value)
+	if name != l.Value {
+		if err := d.deviate(l.Pos, "%s:%q has space around the name", l.Name, l.Value); err != nil {
+			return "", err
+		}
+	}
+	return strings.ToUpper(name), nil
+}
+
+// finish checks what RFC 5545 §3.6 requires of every calendar: PRODID and
+// VERSION exactly once, CALSCALE and METHOD at most once, and at least one
+// component. Lenient mode reads a calendar with no components as the empty
+// calendar it is, without a warning.
 func (d *Decoder) finish(root *Component, line int) (*Calendar, error) {
-	for _, name := range []string{"PRODID", "VERSION"} {
-		if root.Get(name) == nil {
+	for _, name := range []string{"PRODID", "VERSION", "CALSCALE", "METHOD"} {
+		n := 0
+		for range root.Props.All(name) {
+			n++
+		}
+		if n == 0 && (name == "PRODID" || name == "VERSION") {
 			if err := d.deviate(line, "VCALENDAR has no %s", name); err != nil {
 				return nil, err
 			}
 		}
+		if n > 1 {
+			if err := d.deviate(line, "VCALENDAR has %d %s properties", n, name); err != nil {
+				return nil, err
+			}
+		}
+	}
+	if d.Strict && len(root.Children) == 0 {
+		return nil, &SyntaxError{Line: line, Msg: "VCALENDAR has no components"}
 	}
 	return &Calendar{Component: root}, nil
 }

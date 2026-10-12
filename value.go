@@ -183,15 +183,40 @@ func NewDateTime(t time.Time) DateTime {
 	loc := t.Location()
 	if loc != time.UTC && loc != time.Local && loc.String() != "" {
 		if _, err := tz.Load(loc.String()); err == nil {
-			return DateTime{DateTime: civil.DateTimeOf(t), TZID: loc.String(), Loc: loc}
+			v := DateTime{DateTime: civil.DateTimeOf(t), TZID: loc.String(), Loc: loc}
+			if secondReading(t) {
+				v = v.withInstant(t)
+			}
+			return v
 		}
 	}
 	return DateTime{DateTime: civil.DateTimeOf(t.UTC()), UTC: true}
 }
 
+// secondReading reports whether t's wall clock read the same a moment
+// earlier, in the overlap after clocks go back. A TZID's wall clock names
+// the first reading (RFC 5545 §3.3.5), so such a t needs its instant kept.
+func secondReading(t time.Time) bool {
+	start, _ := t.ZoneBounds()
+	if start.IsZero() {
+		return false
+	}
+	_, off := t.Zone()
+	_, before := start.Add(-time.Second).Zone()
+	return before > off && t.Before(start.Add(time.Duration(before-off)*time.Second))
+}
+
 // Floating reports whether v is in no zone: a DATE or a floating
 // DATE-TIME.
 func (v DateTime) Floating() bool { return !v.UTC && v.TZID == "" }
+
+// unresolved reports whether v names a zone that couldn't be resolved, so
+// it has no instant: Time's UTC reading of it is only a fallback.
+func (v DateTime) unresolved() bool { return v.TZID != "" && v.Loc == nil }
+
+// unusable reports whether a value read with err has no instant to use: it
+// is missing, or its TZID couldn't be resolved.
+func unusable(v DateTime, err error) bool { return err != nil && (v.IsZero() || v.unresolved()) }
 
 // Location returns the zone v is in: time.UTC, the resolved TZID, or nil
 // for a floating value (or a TZID that couldn't be resolved).
@@ -331,6 +356,9 @@ func resolve(r tz.Resolver, tzid string) (*time.Location, error) {
 func (p *Property) DateTimes(r tz.Resolver) ([]DateTime, error) {
 	if strings.EqualFold(p.Params.Get("VALUE"), "PERIOD") {
 		ps, err := p.Periods(r)
+		if errors.Is(err, errBackwards) {
+			err = nil // a period's end doesn't change its start
+		}
 		out := make([]DateTime, len(ps))
 		for i, per := range ps {
 			out[i] = per.Start
@@ -366,25 +394,55 @@ func (p *Property) SetDateTime(v DateTime) {
 
 // SetDateTimes sets the value to a comma-separated list of DATE or
 // DATE-TIME values. They are written in the form of the first; later
-// values in other zones are converted to it.
+// values in other zones are converted to it. A floating value has no
+// instant to lose, so a list that starts with one takes the form of its
+// first zoned value instead. A TZID's wall clock names the first of two
+// repeated readings (RFC 5545 §3.3.5), so a list holding the second, when
+// clocks go back, is written in UTC.
 func (p *Property) SetDateTimes(vs ...DateTime) {
 	if len(vs) == 0 {
 		p.Value = ""
 		return
 	}
 	first := vs[0]
+	if first.Floating() && !first.IsDate {
+		for _, v := range vs[1:] {
+			if !v.IsDate && !v.Floating() {
+				first = convertForm(first, v)
+				break
+			}
+		}
+	}
+	if first.TZID != "" && !first.UTC && !first.IsDate && first.Loc != nil {
+		for _, v := range vs {
+			if !v.IsDate && v.Location() != nil && secondReading(v.In(first.Loc)) {
+				first = NewDateTime(first.Time().UTC())
+				break
+			}
+		}
+	}
 	p.Params.Del("TZID")
 	if first.IsDate {
-		p.Params.Set("VALUE", "DATE")
+		p.setValueType("DATE")
 	} else {
-		p.Params.Del("VALUE")
+		p.setValueType("DATE-TIME")
+		if strings.EqualFold(p.Name, "TRIGGER") {
+			// An absolute trigger is in UTC, and RELATED is for a relative
+			// one (§3.8.6.3).
+			p.Params.Del("RELATED")
+			if first.Location() != nil {
+				first = NewDateTime(first.Time().UTC())
+			}
+		}
 	}
 	if first.TZID != "" && !first.UTC && !first.IsDate {
 		p.Params.Set("TZID", first.TZID)
 	}
 	var b []byte
 	for i, v := range vs {
-		if i > 0 {
+		if i == 0 {
+			v = first
+		} else {
 			b = append(b, ',')
 			v = convertForm(v, first)
 		}
@@ -405,11 +463,41 @@ func convertForm(v, like DateTime) DateTime {
 	case like.UTC:
 		return NewDateTime(v.Time().UTC())
 	case like.Loc != nil:
-		out := like
-		out.DateTime = civil.DateTimeOf(v.In(like.Loc))
+		t := v.In(like.Loc)
+		out := DateTime{DateTime: civil.DateTimeOf(t), TZID: like.TZID, Loc: like.Loc}
+		if secondReading(t) {
+			out = out.withInstant(t)
+		}
 		return out
 	}
 	return v
+}
+
+// defaultTypes are the default value types of the properties the DATE,
+// DATE-TIME and DURATION setters are used on (RFC 5545 §3.8, RFC 7986,
+// RFC 9074). Any other property's is TEXT (§3.8.8). REFRESH-INTERVAL has
+// none: its VALUE=DURATION is required.
+var defaultTypes = map[string]string{
+	"DTSTART": "DATE-TIME", "DTEND": "DATE-TIME", "DUE": "DATE-TIME",
+	"RECURRENCE-ID": "DATE-TIME", "RDATE": "DATE-TIME", "EXDATE": "DATE-TIME",
+	"DTSTAMP": "DATE-TIME", "CREATED": "DATE-TIME", "LAST-MODIFIED": "DATE-TIME",
+	"COMPLETED": "DATE-TIME", "ACKNOWLEDGED": "DATE-TIME",
+	"DURATION": "DURATION", "TRIGGER": "DURATION",
+	"REFRESH-INTERVAL": "",
+}
+
+// setValueType sets the VALUE parameter a value of type t needs: none when
+// t is the property's default type, t otherwise (§3.2.20).
+func (p *Property) setValueType(t string) {
+	def, ok := defaultTypes[strings.ToUpper(p.Name)]
+	if !ok {
+		def = "TEXT"
+	}
+	if t == def {
+		p.Params.Del("VALUE")
+	} else {
+		p.Params.Set("VALUE", t)
+	}
 }
 
 // DURATION (RFC 5545 §3.3.6)
@@ -476,7 +564,9 @@ func (d Duration) String() string {
 		if d.Hours != 0 {
 			b.WriteString(strconv.Itoa(d.Hours) + "H")
 		}
-		if d.Minutes != 0 {
+		// Seconds can only follow hours by way of minutes (dur-hour), as
+		// in the RFC's P15DT5H0M20S.
+		if d.Minutes != 0 || d.Hours != 0 && d.Seconds != 0 {
 			b.WriteString(strconv.Itoa(d.Minutes) + "M")
 		}
 		if d.Seconds != 0 || d.IsZero() {
@@ -562,8 +652,10 @@ func (p *Property) Duration() (Duration, error) {
 	return d, nil
 }
 
-// SetDuration sets the value to d.
+// SetDuration sets the value to d, with the VALUE parameter its property
+// needs for a DURATION.
 func (p *Property) SetDuration(d Duration) {
+	p.setValueType("DURATION")
 	p.Value = d.String()
 }
 
@@ -585,10 +677,19 @@ func (p Period) EndTime() DateTime {
 	return p.Start.Add(p.Duration)
 }
 
+// valid reports whether p ends after it starts, as RFC 5545 §3.3.9 requires.
+func (p Period) valid() bool { return p.EndTime().Time().After(p.Start.Time()) }
+
+// errBackwards is wrapped by the error Periods returns for a period that
+// isn't valid.
+var errBackwards = errors.New("doesn't end after it starts")
+
 // Periods returns the value read as a comma-separated list of PERIOD
-// values, as for FREEBUSY and RDATE;VALUE=PERIOD.
+// values, as for FREEBUSY and RDATE;VALUE=PERIOD. A period that doesn't
+// end after it starts is returned as written, with an error (§3.3.9).
 func (p *Property) Periods(r tz.Resolver) ([]Period, error) {
 	var out []Period
+	var backwards error
 	for item := range strings.SplitSeq(p.Value, ",") {
 		item = strings.TrimSpace(item)
 		if item == "" {
@@ -610,9 +711,13 @@ func (p *Property) Periods(r tz.Resolver) ([]Period, error) {
 		} else if per.End, err = p.parseDateTime(rest, r); err != nil {
 			return out, err
 		}
+		// "The start MUST be before the end", or the duration positive.
+		if backwards == nil && !per.valid() {
+			backwards = p.valueError(fmt.Errorf("period %q %w", item, errBackwards))
+		}
 		out = append(out, per)
 	}
-	return out, nil
+	return out, backwards
 }
 
 // RECUR (RFC 5545 §3.3.10)
@@ -647,11 +752,22 @@ func (p *Property) SetInt(n int) { p.Value = strconv.Itoa(n) }
 
 // Float returns the value read as a FLOAT.
 func (p *Property) Float() (float64, error) {
-	f, err := strconv.ParseFloat(strings.TrimSpace(p.Value), 64)
+	f, err := parseFloat(p.Value)
 	if err != nil {
 		return 0, p.valueError(err)
 	}
 	return f, nil
+}
+
+// parseFloat reads a FLOAT (RFC 5545 §3.3.7). strconv.ParseFloat also reads
+// NaN, Inf, hex and digits with underscores, which aren't decimal numbers,
+// so only signs, digits, a point and an exponent get that far.
+func parseFloat(s string) (float64, error) {
+	s = strings.TrimSpace(s)
+	if strings.Trim(s, "+-.0123456789eE") != "" {
+		return 0, fmt.Errorf("%q is not a FLOAT", s)
+	}
+	return strconv.ParseFloat(s, 64)
 }
 
 // Bool returns the value read as a BOOLEAN: TRUE or FALSE, in any case.
@@ -690,6 +806,9 @@ func ParseUTCOffset(s string) (int, error) {
 		}
 		switch i {
 		case 1:
+			if v > 23 {
+				return 0, fmt.Errorf("UTC offset %q has hours over 23", s)
+			}
 			n += v * 3600
 		case 3:
 			if v > 59 {
@@ -749,8 +868,8 @@ func (p *Property) Geo() (lat, lon float64, err error) {
 	if !ok {
 		return 0, 0, p.valueError(errors.New("GEO needs latitude;longitude"))
 	}
-	if lat, err = strconv.ParseFloat(strings.TrimSpace(a), 64); err == nil {
-		lon, err = strconv.ParseFloat(strings.TrimSpace(b), 64)
+	if lat, err = parseFloat(a); err == nil {
+		lon, err = parseFloat(b)
 	}
 	if err != nil {
 		return 0, 0, p.valueError(err)

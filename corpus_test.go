@@ -150,6 +150,8 @@ func TestCorpus(t *testing.T) {
 
 func category(err error) string {
 	switch {
+	case strings.Contains(err.Error(), "no VCALENDAR"):
+		return "no VCALENDAR"
 	case errors.Is(err, io.ErrUnexpectedEOF):
 		return "truncated"
 	case errors.Is(err, contentline.ErrLineTooLong):
@@ -198,7 +200,8 @@ func TestRFC5545Examples(t *testing.T) {
 		}
 		switch ex.Kind {
 		case "property", "parameter":
-			r := contentline.NewReader(strings.NewReader(ex.Text))
+			// The RFC prints each line without its CRLF.
+			r := contentline.NewReader(strings.NewReader(ex.Text + "\r\n"))
 			r.Strict = true
 			for {
 				_, err := r.ReadLine()

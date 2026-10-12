@@ -171,7 +171,7 @@ func (z Timezone) Definition() (tz.Definition, error) {
 		}
 		to := child.Get("TZOFFSETTO")
 		if to == nil {
-			return def, fmt.Errorf("ical: VTIMEZONE %q: %s has no TZOFFSETTO", def.TZID, child.Name)
+			return def, fmt.Errorf("%w %q: %s has no TZOFFSETTO", tz.ErrInvalidDefinition, def.TZID, child.Name)
 		}
 		var err error
 		if o.OffsetTo, err = to.UTCOffset(); err != nil {
@@ -194,7 +194,7 @@ func (z Timezone) Definition() (tz.Definition, error) {
 		}
 		p := child.Get("DTSTART")
 		if p == nil {
-			return def, fmt.Errorf("ical: VTIMEZONE %q: %s has no DTSTART", def.TZID, child.Name)
+			return def, fmt.Errorf("%w %q: %s has no DTSTART", tz.ErrInvalidDefinition, def.TZID, child.Name)
 		}
 		start, err := withoutTZID(p).DateTime(nil)
 		if err != nil {
@@ -282,8 +282,14 @@ func (it Item) Description() string { return textOf(it.Component, "DESCRIPTION")
 // Status returns STATUS, like "CONFIRMED" or "CANCELLED".
 func (it Item) Status() string { return strings.ToUpper(textOf(it.Component, "STATUS")) }
 
-// Class returns CLASS, like "PUBLIC" or "PRIVATE".
-func (it Item) Class() string { return strings.ToUpper(textOf(it.Component, "CLASS")) }
+// Class returns CLASS, like "PUBLIC" or "PRIVATE", or "PUBLIC", the
+// default (§3.8.1.3), when there is none.
+func (it Item) Class() string {
+	if it.Get("CLASS") == nil {
+		return "PUBLIC"
+	}
+	return strings.ToUpper(textOf(it.Component, "CLASS"))
+}
 
 // URL returns URL.
 func (it Item) URL() string {
@@ -373,14 +379,15 @@ func (it Item) IsRecurring() bool {
 // become ExDays and exclude every instance on that day. Empty RRULEs are
 // ignored.
 //
-// On error the set holds every part that could be read.
+// On error the set holds every part that could be read, and is nil when
+// DTSTART can't be: it is missing, or its TZID can't be resolved.
 func (it Item) Recurrence() (*recur.Set, error) {
 	return it.recurrence(nil)
 }
 
 func (it Item) recurrence(floating *time.Location) (*recur.Set, error) {
 	start, err := it.Start()
-	if err != nil && start.IsZero() {
+	if unusable(start, err) {
 		return nil, err
 	}
 	errs := []error{err}
@@ -415,6 +422,9 @@ func (it Item) recurrence(floating *time.Location) (*recur.Set, error) {
 		vs, err := p.DateTimes(it.resolver())
 		errs = append(errs, err)
 		for _, v := range vs {
+			if v.unresolved() {
+				continue // no instant to add; err says why
+			}
 			if sameClock(v) {
 				set.RDates = append(set.RDates, v.DateTime)
 			} else {
@@ -427,6 +437,8 @@ func (it Item) recurrence(floating *time.Location) (*recur.Set, error) {
 		errs = append(errs, err)
 		for _, v := range vs {
 			switch {
+			case v.unresolved():
+				// No instant to exclude; err says why.
 			case v.IsDate && !start.IsDate:
 				set.ExDays = append(set.ExDays, v.Date)
 			case sameClock(v):
