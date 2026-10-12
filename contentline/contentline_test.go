@@ -289,6 +289,39 @@ func TestHostileInputsAreLinear(t *testing.T) {
 	}
 }
 
+// indexControl, which skips eight bytes at a time, finds what a byte loop
+// finds: every byte value at every position, on its own, after an HTAB, and
+// beside high bytes.
+func TestIndexControl(t *testing.T) {
+	naive := func(b []byte) int {
+		for i, c := range b {
+			if isControl(c) {
+				return i
+			}
+		}
+		return -1
+	}
+	for n := 1; n <= 24; n++ {
+		for _, fill := range []byte{'a', 0x80, 0xff, '\t'} {
+			for at := range n {
+				for c := range 256 {
+					b := bytes.Repeat([]byte{fill}, n)
+					b[at] = byte(c)
+					if got, want := indexControl(b), naive(b); got != want {
+						t.Fatalf("indexControl(%q) = %d, want %d", b, got, want)
+					}
+					if at+1 < n {
+						b[n-1] = 0x01
+						if got, want := indexControl(b), naive(b); got != want {
+							t.Fatalf("indexControl(%q) = %d, want %d", b, got, want)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 func FuzzReader(f *testing.F) {
 	for _, s := range []string{
 		"BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n",

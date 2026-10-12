@@ -330,12 +330,9 @@ func (r *Reader) parse(b []byte, pos int) (Line, error) {
 		return l, &SyntaxError{Line: pos, Msg: fmt.Sprintf("%s: %s where ';' or ':' should be", l.Name, quoteByte(b, i))}
 	}
 	value := b[i+1:]
-	for k, c := range value {
-		if isControl(c) {
-			if err := r.deviate(pos, "%s: control character %#02x in the value at byte %d", l.Name, c, k); err != nil {
-				return l, err
-			}
-			break
+	if k := indexControl(value); k >= 0 {
+		if err := r.deviate(pos, "%s: control character %#02x in the value at byte %d", l.Name, value[k], k); err != nil {
+			return l, err
 		}
 	}
 	if r.Strict && !utf8.Valid(value) {

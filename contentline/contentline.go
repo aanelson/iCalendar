@@ -14,6 +14,7 @@
 package contentline
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strings"
 )
@@ -80,4 +81,26 @@ func isNameByte(c byte) bool {
 // %x00-08 / %x0A-1F / %x7F. HTAB (%x09) is not one.
 func isControl(c byte) bool {
 	return c < 0x20 && c != '\t' || c == 0x7f
+}
+
+// indexControl returns the index of the first CONTROL character in b, or -1.
+// It skips eight bytes at a time while none of them is below 0x20 or 0x7F,
+// the usual case for a value.
+func indexControl(b []byte) int {
+	const ones, highs = 0x0101010101010101, 0x8080808080808080
+	i := 0
+	for ; i+8 <= len(b); i += 8 {
+		x := binary.LittleEndian.Uint64(b[i:])
+		del := x ^ 0x7f*ones
+		// A high bit is set for each byte below 0x20 and each 0x7F byte.
+		if ((x-0x20*ones)&^x|(del-ones)&^del)&highs != 0 {
+			break
+		}
+	}
+	for ; i < len(b); i++ {
+		if isControl(b[i]) {
+			return i
+		}
+	}
+	return -1
 }
